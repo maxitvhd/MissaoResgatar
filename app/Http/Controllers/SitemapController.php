@@ -79,60 +79,72 @@ class SitemapController extends Controller
         // 2 - Noticias
         if (config('seo.sitemap.ultimas_noticias', true)) {
             Noticia::orderByDesc('updated_at')->limit(2000)->get(['id', 'updated_at'])
-                ->each(fn($n) => $urls[] = [
-                    'loc'    => $base . '/noticias/' . $n->id,
-                    'ultima' => $n->updated_at,
-                    'freq'   => 'weekly',
-                    'prio'   => '0.7',
-                ]);
+                ->each(function ($n) use (&$urls, $base) {
+                    $urls[] = [
+                        'loc'    => $base . '/noticias/' . $n->id,
+                        'ultima' => $n->updated_at,
+                        'freq'   => 'weekly',
+                        'prio'   => '0.7',
+                    ];
+                });
         }
 
         // 3 - Devocionais
         Devocional::orderByDesc('updated_at')->limit(2000)->get(['id', 'updated_at'])
-            ->each(fn($d) => $urls[] = [
-                'loc'    => $base . '/devocionais/' . $d->id,
-                'ultima' => $d->updated_at,
-                'freq'   => 'weekly',
-                'prio'   => '0.7',
-            ]);
+            ->each(function ($d) use (&$urls, $base) {
+                $urls[] = [
+                    'loc'    => $base . '/devocionais/' . $d->id,
+                    'ultima' => $d->updated_at,
+                    'freq'   => 'weekly',
+                    'prio'   => '0.7',
+                ];
+            });
 
         // 4 - Produtos (somente os a venda; slug ja existe e e unico no banco)
         Produto::where('em_estoque', true)->orderByDesc('updated_at')
             ->limit((int) config('seo.sitemap.produtos_por_pagina', 1000))
             ->get(['slug', 'updated_at'])
-            ->each(fn($p) => $urls[] = [
-                'loc'    => $base . '/produtos/' . $p->slug,
-                'ultima' => $p->updated_at,
-                'freq'   => 'weekly',
-                'prio'   => '0.8',
-            ]);
+            ->each(function ($p) use (&$urls, $base) {
+                $urls[] = [
+                    'loc'    => $base . '/produtos/' . $p->slug,
+                    'ultima' => $p->updated_at,
+                    'freq'   => 'weekly',
+                    'prio'   => '0.8',
+                ];
+            });
 
         // 5 - Categorias de produto
         CategoriaProduto::get(['slug', 'updated_at'])
-            ->each(fn($c) => $urls[] = [
-                'loc'    => $base . '/loja/categoria/' . $c->slug,
-                'ultima' => $c->updated_at,
-                'freq'   => 'weekly',
-                'prio'   => '0.6',
-            ]);
+            ->each(function ($c) use (&$urls, $base) {
+                $urls[] = [
+                    'loc'    => $base . '/loja/categoria/' . $c->slug,
+                    'ultima' => $c->updated_at,
+                    'freq'   => 'weekly',
+                    'prio'   => '0.6',
+                ];
+            });
 
         // 6 - Eventos da agenda
         EventoAgenda::orderBy('data_hora')->get(['id', 'updated_at'])
-            ->each(fn($e) => $urls[] = [
-                'loc'    => $base . '/agenda/' . $e->id,
-                'ultima' => $e->updated_at,
-                'freq'   => 'daily',
-                'prio'   => '0.6',
-            ]);
+            ->each(function ($e) use (&$urls, $base) {
+                $urls[] = [
+                    'loc'    => $base . '/agenda/' . $e->id,
+                    'ultima' => $e->updated_at,
+                    'freq'   => 'daily',
+                    'prio'   => '0.6',
+                ];
+            });
 
         // 7 - Regulamentos
         Regulamento::get(['id', 'updated_at'])
-            ->each(fn($r) => $urls[] = [
-                'loc'    => $base . '/regulamentos/' . $r->id,
-                'ultima' => $r->updated_at,
-                'freq'   => 'yearly',
-                'prio'   => '0.4',
-            ]);
+            ->each(function ($r) use (&$urls, $base) {
+                $urls[] = [
+                    'loc'    => $base . '/regulamentos/' . $r->id,
+                    'ultima' => $r->updated_at,
+                    'freq'   => 'yearly',
+                    'prio'   => '0.4',
+                ];
+            });
 
         // 8 - Atrocoes e patrocinadores ficam na home (paginas ancoradas),
         //     por isso entram como imagens do sitemap

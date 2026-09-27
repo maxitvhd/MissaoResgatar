@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Devocional;
+use App\Models\EventoAgenda;
 use App\Models\Noticia;
 use App\Models\Produto;
 use App\Services\LogService;
@@ -120,7 +121,7 @@ class SeoController extends Controller
             ['Home', $base . '/', 'Página inicial com os destaques da igreja.'],
             ['Notícias e Blog', $base . '/noticias', 'Comunicados, arte e artigos da igreja.'],
             ['Devocionais Diários', $base . '/devocionais', 'Mensagens bíblicas diárias com escritura.'],
-            ['Agenda de Eventos', $base . '/agenda', 'Cultos, encontros e eventos com data, hora e local.'],
+            ['Agenda de Eventos', $base . '/', 'Cultos, encontros e eventos com data, hora e local (seção Agenda da home).'],
             ['Galeria de Fotos', $base . '/galeria', 'Fotos de cultos, louvor, adoração e ação social.'],
             ['Loja Oficial', $base . '/loja', 'Produtos e materiais da igreja com preços.'],
             ['Bíblia Online', $base . '/biblia', 'Leitura da Bíblia e versículos do dia.'],
@@ -161,6 +162,21 @@ class SeoController extends Controller
             }
         } else {
             $linhas[] = '- (sem devocionais cadastrados no momento)';
+        }
+
+        $linhas[] = '';
+        $linhas[] = '## Próximos eventos';
+        $linhas[] = '';
+        $eventos = EventoAgenda::where('data_hora', '>=', now())->orderBy('data_hora')->limit(10)->get();
+        if ($eventos->isNotEmpty()) {
+            foreach ($eventos as $evento) {
+                $quando = $evento->data_hora?->format('d/m/Y') . ' às ' . $evento->data_hora?->format('H:i');
+                $local = $evento->local ? ' - ' . $evento->local : '';
+                $linhas[] = "- [{$evento->titulo}]({$base}/agenda/{$evento->id}) ({$quando}{$local}): "
+                    . SeoService::daPagina()->resumir($evento->descricao, 150);
+            }
+        } else {
+            $linhas[] = '- (nenhum evento programado no momento)';
         }
 
         $linhas[] = '';

@@ -15,6 +15,16 @@ interface ProductDetailModalProps {
 export default function ProductDetailModal({ product, onClose }: ProductDetailModalProps) {
   const [activeImageIndex, setActiveImageIndex] = useState<number>(0);
   const [copiedLink, setCopiedLink] = useState<boolean>(false);
+  const [storePhone, setStorePhone] = useState<string>("");
+
+  useEffect(() => {
+    fetchSettings()
+      .then((data) => {
+        const num = data.whatsappLoja || data.whatsappFlutuante || "";
+        setStorePhone(num);
+      })
+      .catch(() => {});
+  }, []);
 
   // Combina a foto principal e as fotos da galeria, removendo duplicadas ou vazias
   const allImages = React.useMemo(() => {
@@ -48,10 +58,10 @@ export default function ProductDetailModal({ product, onClose }: ProductDetailMo
       if (!product) return;
       if (e.key === "Escape") onClose();
       if (e.key === "ArrowRight") {
-        setActiveImageIndex((prev) => (prev + 1) % allImages.length);
+        setActiveImageIndex((prev) => (prev + 1) % (allImages.length || 1));
       }
       if (e.key === "ArrowLeft") {
-        setActiveImageIndex((prev) => (prev - 1 + allImages.length) % allImages.length);
+        setActiveImageIndex((prev) => (prev - 1 + (allImages.length || 1)) % (allImages.length || 1));
       }
     };
     window.addEventListener("keydown", handleKeyDown);
@@ -72,17 +82,6 @@ export default function ProductDetailModal({ product, onClose }: ProductDetailMo
     e?.stopPropagation();
     setActiveImageIndex((prev) => (prev + 1) % allImages.length);
   };
-
-  const [storePhone, setStorePhone] = useState<string>("");
-
-  useEffect(() => {
-    fetchSettings()
-      .then((data) => {
-        const num = data.whatsappLoja || data.whatsappFlutuante || "";
-        setStorePhone(num);
-      })
-      .catch(() => {});
-  }, []);
 
   const handleWhatsappOrder = () => {
     registerStoreOrderClick({
