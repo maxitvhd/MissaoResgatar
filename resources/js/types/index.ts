@@ -76,6 +76,38 @@ export interface GalleryItem {
   category: string;
 }
 
+// Midias (gerenciador de midias do site)
+export interface MediaUsage {
+  tabela: string;
+  coluna: string;
+  rotulo: string;
+  id: number | null;
+  titulo: string;
+}
+
+export interface MediaFile {
+  caminho: string;
+  nome: string;
+  pasta: string;
+  url: string;
+  tamanho: number;
+  mime: string;
+  data: string;
+  em_uso: MediaUsage[];
+}
+
+export interface MediaList {
+  pasta: string | null;
+  busca: string;
+  pagina: number;
+  paginas: number;
+  por_pagina: number;
+  total: number;
+  pastas: string[];
+  contagem: Record<string, number>;
+  arquivos: MediaFile[];
+}
+
 export interface Regulation {
   id: string;
   title: string;

@@ -154,7 +154,7 @@ export default function AdminLojaTab({ triggerSuccess }: AdminLojaTabProps) {
     reader.onloadend = async () => {
       try {
         const base64 = reader.result as string;
-        const url = await uploadImage(base64, file.name);
+        const url = await uploadImage(base64, file.name, "produtos");
         if (!imageUrl) {
           setImageUrl(url);
         } else {
@@ -177,7 +177,7 @@ export default function AdminLojaTab({ triggerSuccess }: AdminLojaTabProps) {
 
     setUploadingBatch(true);
     try {
-      const urls = await uploadMultipleFiles(Array.from(files));
+      const urls = await uploadMultipleFiles(Array.from(files), "produtos");
       if (!imageUrl && urls.length > 0) {
         setImageUrl(urls[0]);
         setGalleryImages((prev) => [...prev, ...urls.slice(1)]);

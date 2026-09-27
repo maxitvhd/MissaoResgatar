@@ -64,20 +64,47 @@ class AdminController extends Controller
     }
 
     /**
-     * Atualiza o perfil (role) de um usuario.
+     * Atualiza o perfil, nome, e-mail ou senha de um usuario (admin).
      */
     public function atualizarUsuario(Request $request, User $usuario)
     {
-        LogService::info('1 - atualizando perfil do usuario', ['usuario_id' => $usuario->id]);
+        LogService::info('1 - atualizando usuario', ['usuario_id' => $usuario->id]);
 
         $dados = $request->validate([
-            'role' => ['required', 'in:admin,user'],
+            'role'     => ['sometimes', 'required', 'in:admin,user'],
+            'name'     => ['sometimes', 'required', 'string', 'max:255'],
+            'email'    => ['sometimes', 'required', 'email', 'max:255', 'unique:users,email,' . $usuario->id],
+            'password' => ['sometimes', 'nullable', 'string', 'min:6'],
         ]);
+
+        if (!empty($dados['password'])) {
+            $dados['password'] = \Illuminate\Support\Facades\Hash::make($dados['password']);
+        } else {
+            unset($dados['password']);
+        }
 
         $usuario->update($dados);
 
-        LogService::info('2 - perfil atualizado', ['usuario_id' => $usuario->id, 'role' => $dados['role']]);
+        LogService::info('2 - usuario atualizado', ['usuario_id' => $usuario->id]);
 
-        return back()->with('success', 'Perfil do usuário atualizado.');
+        if ($request->wantsJson()) {
+            return new UsuarioResource($usuario->fresh());
+        }
+
+        return back()->with('success', 'Usuário atualizado com sucesso.');
+    }
+
+    /**
+     * Exclui um usuario do sistema (admin).
+     */
+    public function excluirUsuario(User $usuario)
+    {
+        LogService::info('1 - excluindo usuario', ['usuario_id' => $usuario->id]);
+
+        $usuario->delete();
+
+        LogService::info('2 - usuario excluido', ['usuario_id' => $usuario->id]);
+
+        return response()->json(['success' => true]);
     }
 }

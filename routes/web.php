@@ -13,6 +13,7 @@ use App\Http\Controllers\FinanceiroController;
 use App\Http\Controllers\GaleriaController;
 use App\Http\Controllers\LojaController;
 use App\Http\Controllers\MembroController;
+use App\Http\Controllers\MidiaController;
 use App\Http\Controllers\NoticiaController;
 use App\Http\Controllers\PaginaController;
 use App\Http\Controllers\PatrocinadorController;
@@ -117,6 +118,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::get('/', [AdminController::class, 'dashboard'])->name('dashboard');
     Route::get('/usuarios', [AdminController::class, 'usuarios'])->name('usuarios');
     Route::put('/usuarios/{usuario}', [AdminController::class, 'atualizarUsuario'])->name('usuarios.atualizar');
+    Route::delete('/usuarios/{usuario}', [AdminController::class, 'excluirUsuario'])->name('usuarios.excluir');
 
     // Gestao de conteudo (API JSON usada pelo AdminDashboard React)
     Route::post('/noticias', [NoticiaController::class, 'criar']);
@@ -186,4 +188,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
 
     Route::post('/upload', [UploadController::class, 'enviar']);
     Route::post('/upload/lote', [UploadController::class, 'enviarLote']);
+
+    // Gerenciador de midias do site
+    Route::get('/midias', [MidiaController::class, 'index']);
+    Route::put('/midias/renomear', [MidiaController::class, 'renomear']);
+    Route::delete('/midias', [MidiaController::class, 'excluir']);
 });

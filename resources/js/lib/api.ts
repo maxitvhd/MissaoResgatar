@@ -2,7 +2,8 @@ import {
   NewsPost, Devotional, PersonalNote, User, DailyVerse, AgendaEvent, GalleryItem, 
   Regulation, Caravan, Sponsor, SiteSettings, Attraction,
   VideoYoutube, ProductCategory, Product, ClosedLesson,
-  Member, FinancialTransaction, StoreOrder, FinancialDashboardData, PublicTransparencyData
+  Member, FinancialTransaction, StoreOrder, FinancialDashboardData, PublicTransparencyData,
+  MediaList, MediaUsage
 } from "../types";
 
 // Token CSRF para requisições de escrita (POST/PUT/DELETE) via fetch
@@ -205,6 +206,24 @@ export async function fetchAllUsers(): Promise<User[]> {
   }
 }
 
+export async function updateUser(
+  id: string | number, 
+  data: { role?: string; name?: string; email?: string; password?: string }
+): Promise<User> {
+  const res = await jsonRequest(`/admin/usuarios/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error("Failed to update user");
+  return await unwrap(res);
+}
+
+export async function deleteUser(id: string | number): Promise<boolean> {
+  const res = await jsonRequest(`/admin/usuarios/${id}`, { method: "DELETE" });
+  return res.ok;
+}
+
 export async function editNews(id: string, post: Partial<NewsPost>): Promise<NewsPost> {
   const res = await jsonRequest(`/admin/noticias/${id}`, {
     method: "PUT",
@@ -220,20 +239,21 @@ export async function editNews(id: string, post: Partial<NewsPost>): Promise<New
   return await unwrap(res);
 }
 
-export async function uploadImage(base64: string, filename: string): Promise<string> {
+export async function uploadImage(base64: string, filename: string, pasta?: string): Promise<string> {
   const res = await jsonRequest("/admin/upload", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ base64, nome: filename }),
+    body: JSON.stringify({ base64, nome: filename, pasta }),
   });
   if (!res.ok) throw new Error("Failed to upload image");
   const data = await res.json();
   return data.url;
 }
 
-export async function uploadFile(file: File): Promise<string> {
+export async function uploadFile(file: File, pasta?: string): Promise<string> {
   const formData = new FormData();
   formData.append("arquivo", file);
+  if (pasta) formData.append("pasta", pasta);
 
   const res = await fetch("/admin/upload", {
     method: "POST",
@@ -250,11 +270,12 @@ export async function uploadFile(file: File): Promise<string> {
   return data.url;
 }
 
-export async function uploadMultipleFiles(files: File[]): Promise<string[]> {
+export async function uploadMultipleFiles(files: File[], pasta?: string): Promise<string[]> {
   const formData = new FormData();
   for (let i = 0; i < files.length; i++) {
     formData.append("arquivos[]", files[i]);
   }
+  if (pasta) formData.append("pasta", pasta);
 
   const res = await fetch("/admin/upload/lote", {
     method: "POST",
@@ -273,6 +294,59 @@ export async function uploadMultipleFiles(files: File[]): Promise<string[]> {
 
   const data = await res.json();
   return data.urls || [];
+}
+
+// Midias (gerenciador de midias do site)
+
+// Lista as midias por pasta, com busca, paginacao e aviso de uso
+export async function fetchMedias(pasta?: string, busca?: string, pagina: number = 1): Promise<MediaList> {
+  const params = new URLSearchParams();
+  if (pasta) params.append("pasta", pasta);
+  if (busca) params.append("busca", busca);
+  params.append("pagina", String(pagina));
+
+  const res = await fetch(`/admin/midias?${params.toString()}`, {
+    headers: { "Accept": "application/json", "X-Requested-With": "XMLHttpRequest" },
+  });
+
+  if (!res.ok) throw new Error("Falha ao listar midias");
+  return await res.json();
+}
+
+// Renomeia a midia (o backend corrige as URLs que apontam para ela)
+export async function renameMedia(caminho: string, novoNome: string): Promise<{ message: string; url: string; referencias_atualizadas: number }> {
+  const res = await jsonRequest("/admin/midias/renomear", {
+    method: "PUT",
+    body: JSON.stringify({ caminho, novo_nome: novoNome }),
+  });
+
+  const data = await res.json().catch(() => null);
+  if (!res.ok) {
+    throw new Error(data?.message || data?.errors?.novo_nome?.[0] || "Falha ao renomear midia");
+  }
+  return data;
+}
+
+// Apaga a midia (bloqueia se estiver em uso, a menos que confirme)
+export async function deleteMedia(caminho: string, confirmar: boolean = false): Promise<{ message: string; em_uso: MediaUsage[]; sem_imagem: string[] }> {
+  const res = await fetch("/admin/midias", {
+    method: "DELETE",
+    headers: {
+      "Accept": "application/json",
+      "Content-Type": "application/json",
+      "X-Requested-With": "XMLHttpRequest",
+      "X-CSRF-TOKEN": csrfToken()
+    },
+    body: JSON.stringify({ caminho, confirmar }),
+  });
+
+  const data = await res.json().catch(() => null);
+  if (!res.ok) {
+    const erro: any = new Error(data?.error || "Falha ao excluir midia");
+    erro.emUso = data?.em_uso || [];
+    throw erro;
+  }
+  return data;
 }
 
 // Events (Agenda)

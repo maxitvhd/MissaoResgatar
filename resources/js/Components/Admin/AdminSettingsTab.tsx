@@ -120,7 +120,7 @@ export default function AdminSettingsTab() {
     if (!file) return;
     setUploadingLogo(true);
     try {
-      const url = await uploadFile(file);
+      const url = await uploadFile(file, "site");
       setLogoUrl(url);
       triggerSuccess("Logo carregada! Clique em 'Salvar Alterações' para aplicar.");
     } catch (err) {
@@ -136,7 +136,7 @@ export default function AdminSettingsTab() {
     if (!file) return;
     setUploadingVideo(true);
     try {
-      const url = await uploadFile(file);
+      const url = await uploadFile(file, "site");
       setVideoBgUrl(url);
       triggerSuccess("Vídeo de fundo carregado! Clique em 'Salvar Alterações' para aplicar.");
     } catch (err) {
@@ -152,7 +152,7 @@ export default function AdminSettingsTab() {
     if (!file) return;
     setUploadingHeroImg(true);
     try {
-      const url = await uploadFile(file);
+      const url = await uploadFile(file, "site");
       setHeroImgUrl(url);
       triggerSuccess("Imagem de fundo carregada! Clique em 'Salvar Alterações' para aplicar.");
     } catch (err) {

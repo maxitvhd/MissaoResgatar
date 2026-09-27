@@ -121,7 +121,7 @@ export default function AdminAulasTab({ triggerSuccess }: AdminAulasTabProps) {
 
     setUploadingPdf(true);
     try {
-      const url = await uploadFile(file);
+      const url = await uploadFile(file, "aulas");
       setMaterialUrl(url);
       triggerSuccess("Material PDF enviado com sucesso!");
     } catch (err) {

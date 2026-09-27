@@ -11,9 +11,10 @@ import AdminAulasTab from "./Admin/AdminAulasTab";
 import AdminSettingsTab from "./Admin/AdminSettingsTab";
 import { AdminMembrosTab } from "./Admin/AdminMembrosTab";
 import { AdminFinanceiroTab } from "./Admin/AdminFinanceiroTab";
+import AdminMidiasTab from "./Admin/AdminMidiasTab";
 import { 
   fetchNews, createNews, deleteNews, editNews, uploadImage, 
-  fetchDevotionals, createDevotional, deleteDevotional, fetchAllUsers, editDevotional,
+  fetchDevotionals, createDevotional, deleteDevotional, fetchAllUsers, updateUser, deleteUser, editDevotional,
   fetchEvents, createEvent, editEvent, deleteEvent,
   fetchGallery, createGalleryItem, deleteGalleryItem, editGalleryItem, createGalleryBatch,
   fetchRegulations, createRegulation, deleteRegulation, editRegulation,
@@ -25,7 +26,7 @@ import {
 import { NewsPost, Devotional, User, AgendaEvent, GalleryItem, Regulation, Caravan, Sponsor, SiteSettings, Attraction } from "../types";
 import { useTranslation } from "react-i18next";
 
-type AdminSubTabId = "news" | "devotionals" | "events" | "gallery" | "regulations" | "caravans" | "sponsors" | "users" | "telemetry" | "settings" | "attractions" | "videos" | "loja" | "aulas" | "membros" | "financeiro";
+type AdminSubTabId = "news" | "devotionals" | "events" | "gallery" | "midias" | "regulations" | "caravans" | "sponsors" | "users" | "telemetry" | "settings" | "attractions" | "videos" | "loja" | "aulas" | "membros" | "financeiro";
 type AdminGroupId = "conteudo" | "evento" | "loja" | "membros_grupo" | "financeiro" | "configuracoes" | "sistema";
 
 interface AdminSubItem {
@@ -139,6 +140,72 @@ export default function AdminDashboard() {
   // Notifications feedback
   const [successMsg, setSuccessMsg] = useState<string>("");
 
+  // User Management State
+  const [editingUserId, setEditingUserId] = useState<string | number | null>(null);
+  const [editUserName, setEditUserName] = useState<string>("");
+  const [editUserEmail, setEditUserEmail] = useState<string>("");
+  const [editUserRole, setEditUserRole] = useState<string>("user");
+  const [editUserPassword, setEditUserPassword] = useState<string>("");
+  const [savingUser, setSavingUser] = useState<boolean>(false);
+
+  const handleUpdateRole = async (userId: string | number, newRole: string) => {
+    try {
+      const updated = await updateUser(userId, { role: newRole });
+      setUsers(users.map(u => u.id === userId ? { ...u, role: updated.role } : u));
+      triggerSuccess("Nível de acesso alterado para " + (newRole === "admin" ? "Administrador" : "Membro/Usuário"));
+    } catch (err) {
+      console.error(err);
+      alert("Erro ao alterar nível de acesso.");
+    }
+  };
+
+  const handleStartEditUser = (user: User) => {
+    setEditingUserId(user.id);
+    setEditUserName(user.name);
+    setEditUserEmail(user.email);
+    setEditUserRole(user.role);
+    setEditUserPassword("");
+  };
+
+  const handleSaveUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingUserId) return;
+    setSavingUser(true);
+    try {
+      const payload: any = {
+        name: editUserName,
+        email: editUserEmail,
+        role: editUserRole,
+      };
+      if (editUserPassword) {
+        payload.password = editUserPassword;
+      }
+      const updated = await updateUser(editingUserId, payload);
+      setUsers(users.map(u => u.id === editingUserId ? updated : u));
+      setEditingUserId(null);
+      triggerSuccess("Dados do usuário salvos com sucesso!");
+    } catch (err) {
+      console.error(err);
+      alert("Erro ao salvar alterações do usuário.");
+    } finally {
+      setSavingUser(false);
+    }
+  };
+
+  const handleDeleteUser = async (userId: string | number) => {
+    if (!confirm("Tem certeza que deseja remover este usuário do sistema?")) return;
+    try {
+      const ok = await deleteUser(userId);
+      if (ok) {
+        setUsers(users.filter(u => u.id !== userId));
+        triggerSuccess("Usuário removido com sucesso.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Erro ao excluir usuário.");
+    }
+  };
+
   const adminGroups: AdminGroup[] = [
     {
       id: "conteudo",
@@ -152,6 +219,7 @@ export default function AdminDashboard() {
         { id: "devotionals", label: "Devocionais Diários", icon: BookOpen, desc: "Mensagens bíblicas e oração" },
         { id: "videos", label: "Vídeos do YouTube", icon: Youtube, desc: "Transmissões e playlists" },
         { id: "gallery", label: "Galeria de Fotos", icon: ImageIcon, desc: "Fotos de eventos e cultos" },
+        { id: "midias", label: "Gerenciador de Mídias", icon: Images, desc: "Organizar, renomear e excluir arquivos" },
       ],
     },
     {
@@ -296,7 +364,8 @@ export default function AdminDashboard() {
   const handleImageFileChange = async (
     e: React.ChangeEvent<HTMLInputElement>, 
     setImgUrl: (url: string) => void, 
-    setUploading: (u: boolean) => void
+    setUploading: (u: boolean) => void,
+    pasta?: string
   ) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -306,7 +375,7 @@ export default function AdminDashboard() {
       reader.onloadend = async () => {
         try {
           const base64 = reader.result as string;
-          const url = await uploadImage(base64, file.name);
+          const url = await uploadImage(base64, file.name, pasta);
           setImgUrl(url);
           triggerSuccess(t("admin.imageUploaded"));
         } catch (uploadErr) {
@@ -568,7 +637,7 @@ export default function AdminDashboard() {
     setUploadingGalBatch(true);
     try {
       // 1. Upload dos arquivos em lote
-      const uploadedUrls = await uploadMultipleFiles(batchFiles);
+      const uploadedUrls = await uploadMultipleFiles(batchFiles, "galeria");
 
       // 2. Criação em lote no banco de dados
       const createdItems = await createGalleryBatch({
@@ -966,6 +1035,9 @@ export default function AdminDashboard() {
             {/* SUB-TAB: GESTÃO FINANCEIRA */}
             {activeSubTab === "financeiro" && <AdminFinanceiroTab />}
 
+            {/* SUB-TAB: GERENCIADOR DE MÍDIAS */}
+            {activeSubTab === "midias" && <AdminMidiasTab triggerSuccess={triggerSuccess} />}
+
             {/* SUB-TAB 1: NEWS */}
             {activeSubTab === "news" && (
               <div className="space-y-8 text-left">
@@ -1039,7 +1111,7 @@ export default function AdminDashboard() {
                             accept="image/*"
                             id="news-img-upload"
                             className="hidden"
-                            onChange={(e) => handleImageFileChange(e, setNewsImage, setUploadingNewsImg)}
+                            onChange={(e) => handleImageFileChange(e, setNewsImage, setUploadingNewsImg, "noticias")}
                           />
                           <label 
                             htmlFor="news-img-upload"
@@ -1313,7 +1385,7 @@ export default function AdminDashboard() {
                           accept="image/*"
                           id="event-img-upload"
                           className="hidden"
-                          onChange={(e) => handleImageFileChange(e, setEventImage, setUploadingEventImg)}
+                          onChange={(e) => handleImageFileChange(e, setEventImage, setUploadingEventImg, "eventos")}
                         />
                         <label 
                           htmlFor="event-img-upload"
@@ -1640,7 +1712,7 @@ export default function AdminDashboard() {
                             accept="image/*"
                             id="gal-img-upload"
                             className="hidden"
-                            onChange={(e) => handleImageFileChange(e, setGalUrl, setUploadingGalImg)}
+                            onChange={(e) => handleImageFileChange(e, setGalUrl, setUploadingGalImg, "galeria")}
                           />
                           <label 
                             htmlFor="gal-img-upload"
@@ -2097,7 +2169,7 @@ export default function AdminDashboard() {
                         accept="image/*"
                         id="att-img-upload"
                         className="hidden"
-                        onChange={(e) => handleImageFileChange(e, setAttImage, setUploadingAttImg)}
+                        onChange={(e) => handleImageFileChange(e, setAttImage, setUploadingAttImg, "atracoes")}
                       />
                       <label 
                         htmlFor="att-img-upload"
@@ -2223,7 +2295,7 @@ export default function AdminDashboard() {
                         accept="image/*"
                         id="spon-img-upload"
                         className="hidden"
-                        onChange={(e) => handleImageFileChange(e, setSponImg, setUploadingSponImg)}
+                        onChange={(e) => handleImageFileChange(e, setSponImg, setUploadingSponImg, "patrocinadores")}
                       />
                       <label 
                         htmlFor="spon-img-upload"
@@ -2277,19 +2349,104 @@ export default function AdminDashboard() {
             {/* SUB-TAB 8: USERS */}
             {activeSubTab === "users" && (
               <div className="space-y-6 text-left">
-                <div>
-                  <h3 className="text-sm font-serif font-bold text-slate-200">Gestão de Contas Sincronizadas</h3>
-                  <p className="text-[11px] text-slate-500 mt-0.5">Usuários registrados no portal da Missão Resgatar que possuem anotações ativas na nuvem.</p>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+                  <div>
+                    <h3 className="text-sm font-serif font-bold text-slate-200">Gestão de Contas e Níveis de Acesso</h3>
+                    <p className="text-[11px] text-slate-500 mt-0.5">Altere permissões de administrador, edite dados dos usuários ou redefina senhas.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={loadAllAdminData}
+                    className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 rounded-xl text-xs font-mono flex items-center gap-1.5 self-start sm:self-auto cursor-pointer"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    <span>Atualizar Lista</span>
+                  </button>
                 </div>
 
-                <div className="border border-slate-800 rounded-xl overflow-hidden">
+                {/* EDIT USER MODAL / PANEL */}
+                {editingUserId && (
+                  <form onSubmit={handleSaveUser} className="p-5 rounded-2xl bg-amber-500/5 border border-amber-500/20 space-y-4">
+                    <div className="flex items-center justify-between border-b border-amber-500/20 pb-3">
+                      <h4 className="text-xs font-mono font-bold uppercase text-amber-400 flex items-center gap-2">
+                        <Edit className="w-4 h-4" />
+                        Editar Dados do Usuário #{editingUserId}
+                      </h4>
+                      <button
+                        type="button"
+                        onClick={() => setEditingUserId(null)}
+                        className="text-xs text-red-400 hover:text-red-300 font-mono flex items-center gap-1 cursor-pointer"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                        Cancelar
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                      <div>
+                        <label className="text-[10px] font-mono text-slate-400 uppercase block mb-1">Nome Completo *</label>
+                        <input
+                          type="text"
+                          required
+                          value={editUserName}
+                          onChange={(e) => setEditUserName(e.target.value)}
+                          className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 outline-none focus:border-amber-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-mono text-slate-400 uppercase block mb-1">E-mail de Login *</label>
+                        <input
+                          type="email"
+                          required
+                          value={editUserEmail}
+                          onChange={(e) => setEditUserEmail(e.target.value)}
+                          className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 outline-none focus:border-amber-500 font-mono"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-mono text-slate-400 uppercase block mb-1">Nível de Acesso (Role) *</label>
+                        <select
+                          value={editUserRole}
+                          onChange={(e) => setEditUserRole(e.target.value)}
+                          className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 outline-none focus:border-amber-500 font-mono font-bold"
+                        >
+                          <option value="user">Membro / Usuário Padrão</option>
+                          <option value="admin">Administrador (Admin)</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-mono text-slate-400 uppercase block mb-1">Nova Senha (opcional)</label>
+                        <input
+                          type="password"
+                          placeholder="Deixe em branco para manter"
+                          value={editUserPassword}
+                          onChange={(e) => setEditUserPassword(e.target.value)}
+                          className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 outline-none focus:border-amber-500 font-mono"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end gap-2 pt-2">
+                      <button
+                        type="submit"
+                        disabled={savingUser}
+                        className="py-2 px-5 rounded-xl bg-amber-400 hover:bg-amber-500 text-slate-950 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow disabled:opacity-50"
+                      >
+                        <CheckCircle className="w-4 h-4" />
+                        <span>{savingUser ? "Salvando..." : "Salvar Alterações"}</span>
+                      </button>
+                    </div>
+                  </form>
+                )}
+
+                <div className="border border-slate-800 rounded-xl overflow-hidden shadow-sm">
                   <table className="w-full text-left text-xs text-slate-300">
                     <thead className="bg-slate-900 text-[10px] font-mono text-slate-400 uppercase tracking-wider">
                       <tr>
                         <th className="p-3">Nome</th>
                         <th className="p-3">Email</th>
                         <th className="p-3">Nível de Acesso</th>
-                        <th className="p-3">ID do Usuário</th>
+                        <th className="p-3 text-right">Ações</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-800 bg-slate-950/20">
@@ -2299,19 +2456,43 @@ export default function AdminDashboard() {
                         </tr>
                       ) : (
                         users.map((user) => (
-                          <tr key={user.id} className="hover:bg-slate-900/40">
+                          <tr key={user.id} className="hover:bg-slate-900/40 transition-colors">
                             <td className="p-3 font-medium text-slate-200">{user.name}</td>
                             <td className="p-3 font-mono">{user.email}</td>
                             <td className="p-3">
-                              <span className={`px-2 py-0.5 rounded text-[9px] font-mono font-bold uppercase ${
-                                user.role === "admin"
-                                  ? "bg-amber-400/10 text-amber-400 border border-amber-500/20"
-                                  : "bg-blue-500/10 text-blue-400 border border-blue-500/20"
-                              }`}>
-                                {user.role}
-                              </span>
+                              <select
+                                value={user.role}
+                                onChange={(e) => handleUpdateRole(user.id, e.target.value)}
+                                className={`px-2 py-1 rounded text-[10px] font-mono font-bold uppercase outline-none border cursor-pointer ${
+                                  user.role === "admin"
+                                    ? "bg-amber-500/10 text-amber-400 border-amber-500/30"
+                                    : "bg-blue-500/10 text-blue-400 border-blue-500/30"
+                                }`}
+                              >
+                                <option value="user" className="bg-slate-950 text-slate-200">Membro (User)</option>
+                                <option value="admin" className="bg-slate-950 text-amber-400 font-bold">Administrador (Admin)</option>
+                              </select>
                             </td>
-                            <td className="p-3 font-mono text-slate-500">{user.id}</td>
+                            <td className="p-3 text-right">
+                              <div className="flex items-center justify-end gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => handleStartEditUser(user)}
+                                  className="px-2.5 py-1 bg-slate-900 hover:bg-amber-400/10 text-slate-300 hover:text-amber-400 rounded-lg text-[10px] font-mono border border-slate-800 flex items-center gap-1 cursor-pointer transition-colors"
+                                >
+                                  <Edit className="w-3 h-3" />
+                                  <span>Editar</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteUser(user.id)}
+                                  className="px-2.5 py-1 bg-slate-900 hover:bg-red-500/10 text-slate-400 hover:text-red-400 rounded-lg text-[10px] font-mono border border-slate-800 flex items-center gap-1 cursor-pointer transition-colors"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                  <span>Excluir</span>
+                                </button>
+                              </div>
+                            </td>
                           </tr>
                         ))
                       )}
