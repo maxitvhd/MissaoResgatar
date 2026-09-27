@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { 
   ImageIcon, ToggleLeft, Video, Share2, Mail, CheckCircle, 
-  Upload, X, RotateCcw, Sliders, ExternalLink, Save, RefreshCw, Eye, MessageCircle, Phone
+  Upload, X, RotateCcw, Sliders, ExternalLink, Save, RefreshCw, Eye, MessageCircle, Phone,
+  Search, Globe, MapPin
 } from "lucide-react";
 import { fetchSettings, updateSettings, uploadFile } from "../../lib/api";
 import { SiteSettings } from "../../types";
 
 export default function AdminSettingsTab() {
-  const [activeSubMenu, setActiveSubMenu] = useState<"logo" | "secoes" | "hero" | "redes" | "whatsapp" | "imprensa">("logo");
+  const [activeSubMenu, setActiveSubMenu] = useState<"logo" | "secoes" | "hero" | "redes" | "whatsapp" | "imprensa" | "seo">("logo");
   const [loading, setLoading] = useState<boolean>(true);
   const [saving, setSaving] = useState<boolean>(false);
   const [successMsg, setSuccessMsg] = useState<string>("");
@@ -52,6 +53,20 @@ export default function AdminSettingsTab() {
   const [pressMaterialLink, setPressMaterialLink] = useState<string>("");
   const [pressCredLink, setPressCredLink] = useState<string>("");
 
+  // SEO
+  const [seoTitle, setSeoTitle] = useState<string>("");
+  const [seoDescription, setSeoDescription] = useState<string>("");
+  const [seoKeywords, setSeoKeywords] = useState<string>("");
+  const [seoOgImage, setSeoOgImage] = useState<string>("");
+  const [seoTwitterSite, setSeoTwitterSite] = useState<string>("");
+  const [contactPhone, setContactPhone] = useState<string>("");
+  const [addressStreet, setAddressStreet] = useState<string>("");
+  const [addressNumber, setAddressNumber] = useState<string>("");
+  const [addressNeighborhood, setAddressNeighborhood] = useState<string>("");
+  const [addressCity, setAddressCity] = useState<string>("");
+  const [addressState, setAddressState] = useState<string>("");
+  const [addressZip, setAddressZip] = useState<string>("");
+
   const loadSettings = async () => {
     setLoading(true);
     try {
@@ -76,6 +91,18 @@ export default function AdminSettingsTab() {
       setPressEmail(data.pressEmail || "");
       setPressMaterialLink(data.pressMaterialLink || "");
       setPressCredLink(data.pressCredLink || "");
+      setSeoTitle(data.seoTitle || "");
+      setSeoDescription(data.seoDescription || "");
+      setSeoKeywords(data.seoKeywords || "");
+      setSeoOgImage(data.seoOgImage || "");
+      setSeoTwitterSite(data.seoTwitterSite || "");
+      setContactPhone(data.contactPhone || "");
+      setAddressStreet(data.addressStreet || "");
+      setAddressNumber(data.addressNumber || "");
+      setAddressNeighborhood(data.addressNeighborhood || "");
+      setAddressCity(data.addressCity || "");
+      setAddressState(data.addressState || "");
+      setAddressZip(data.addressZip || "");
     } catch (err) {
       console.error(err);
     } finally {
@@ -115,6 +142,18 @@ export default function AdminSettingsTab() {
         pressEmail,
         pressMaterialLink,
         pressCredLink,
+        seoTitle,
+        seoDescription,
+        seoKeywords,
+        seoOgImage,
+        seoTwitterSite,
+        contactPhone,
+        addressStreet,
+        addressNumber,
+        addressNeighborhood,
+        addressCity,
+        addressState,
+        addressZip,
       });
       triggerSuccess("Configurações salvas com sucesso!");
     } catch (err) {
@@ -196,6 +235,7 @@ export default function AdminSettingsTab() {
     { id: "redes", label: "Redes Sociais", icon: Share2, desc: "Instagram, YouTube e Facebook" },
     { id: "whatsapp", label: "WhatsApp & Loja", icon: MessageCircle, desc: "Botão flutuante e vendas" },
     { id: "imprensa", label: "Imprensa & Mídia", icon: Mail, desc: "Assessoria e credenciamento" },
+    { id: "seo", label: "SEO & Busca", icon: Search, desc: "Google, redes sociais e IAs" },
   ];
 
   return (
@@ -834,6 +874,235 @@ export default function AdminSettingsTab() {
             >
               <Save className="w-4 h-4" />
               <span>{saving ? "Salvando..." : "Salvar Informações de Imprensa"}</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* SUB-MENU: SEO & BUSCA */}
+      {activeSubMenu === "seo" && (
+        <div className="space-y-6 bg-slate-900/40 border border-slate-800/80 p-6 rounded-3xl">
+          <div className="border-b border-slate-800/80 pb-3">
+            <h4 className="text-sm font-serif font-bold text-slate-100 flex items-center gap-2">
+              <Search className="w-4 h-4 text-emerald-400" />
+              SEO, Mapa do Site e Busca por IA
+            </h4>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Estes textos aparecem no Google, ao compartilhar no WhatsApp/Facebook e são lidos pelos
+              buscadores de IA (ChatGPT, Claude, Perplexity). Campo em branco = usa o padrão do sistema.
+            </p>
+          </div>
+
+          {/* PREVIEW */}
+          <div className="bg-slate-950/60 p-4 rounded-2xl border border-slate-800">
+            <p className="text-[10px] font-mono text-slate-500 uppercase mb-2">Prévia no Google</p>
+            <p className="text-[11px] text-emerald-500 font-mono truncate">
+              {seoTitle || "Missão Resgatar | Igreja em Itaquaquecetuba - SP"}
+            </p>
+            <p className="text-[11px] text-sky-500 font-mono truncate mt-0.5">
+              {typeof window !== "undefined" ? window.location.origin : "https://www.mresgatar.com.br"}
+            </p>
+            <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+              {seoDescription ||
+                "Missão Resgatar, uma igreja viva resgatando vidas em Itaquaquecetuba. Notícias, devocionais, agenda de cultos, galeria de fotos, loja e rádio online 24h."}
+            </p>
+            <p className="text-[10px] text-slate-500 mt-3">
+             {(seoDescription || "descrição padrão").length} caracteres (recomendado: 120 a 160)
+            </p>
+          </div>
+
+          {/* ARQUIVOS GERADOS */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {[
+              { label: "Sitemap XML", url: "/sitemap.xml", desc: "Todas as URLs para o Google" },
+              { label: "Robots.txt", url: "/robots.txt", desc: "Regras de rastreamento" },
+              { label: "llms.txt", url: "/llms.txt", desc: "Manifesto para IAs" },
+            ].map((arq) => (
+              <a
+                key={arq.url}
+                href={arq.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-slate-950/60 p-4 rounded-2xl border border-slate-800 hover:border-amber-500/40 transition-colors"
+              >
+                <p className="text-xs font-bold text-amber-400 flex items-center gap-1.5">
+                  <Globe className="w-3.5 h-3.5" /> {arq.label}
+                </p>
+                <p className="text-[10px] text-slate-500 font-mono mt-1">{arq.url}</p>
+                <p className="text-[11px] text-slate-400 mt-1">{arq.desc}</p>
+              </a>
+            ))}
+          </div>
+
+          {/* IDENTIDADE NO GOOGLE */}
+          <div className="space-y-2">
+            <label className="text-[10px] font-mono text-slate-400 uppercase block">
+              Título do Site (title) - em branco usa o padrão
+            </label>
+            <input
+              type="text"
+              placeholder="Missão Resgatar | Igreja em Itaquaquecetuba - SP"
+              value={seoTitle}
+              onChange={(e) => setSeoTitle(e.target.value)}
+              className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 outline-none focus:border-amber-500"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-[10px] font-mono text-slate-400 uppercase block">
+              Descrição (meta description) - até 160 caracteres
+            </label>
+            <textarea
+              rows={3}
+              maxLength={500}
+              placeholder="Resumo do site que aparece no Google e ao compartilhar."
+              value={seoDescription}
+              onChange={(e) => setSeoDescription(e.target.value)}
+              className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 outline-none focus:border-amber-500 resize-y"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-[10px] font-mono text-slate-400 uppercase block">
+              Palavras-chave (separadas por vírgula)
+            </label>
+            <input
+              type="text"
+              placeholder="igreja em Itaquaquecetuba, culto, devocional diário..."
+              value={seoKeywords}
+              onChange={(e) => setSeoKeywords(e.target.value)}
+              className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 outline-none focus:border-amber-500"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div className="space-y-2">
+              <label className="text-[10px] font-mono text-slate-400 uppercase block">
+                Imagem de compartilhamento (og:image 1200x630)
+              </label>
+              <input
+                type="text"
+                placeholder="Em branco usa o logo ou a imagem hero"
+                value={seoOgImage}
+                onChange={(e) => setSeoOgImage(e.target.value)}
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 outline-none focus:border-amber-500 font-mono"
+              />
+              <span className="text-[10px] text-slate-500 block">
+                É a imagem que aparece no WhatsApp e Facebook ao linkar o site.
+              </span>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[10px] font-mono text-slate-400 uppercase block">
+                Perfil Twitter / X
+              </label>
+              <input
+                type="text"
+                placeholder="@missaoresgatar"
+                value={seoTwitterSite}
+                onChange={(e) => setSeoTwitterSite(e.target.value)}
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 outline-none focus:border-amber-500 font-mono"
+              />
+              <span className="text-[10px] text-slate-500 block">
+                Sem o "@" no início. Deixe vazio se a igreja não tiver perfil.
+              </span>
+            </div>
+          </div>
+
+          {/* CONTATO E ENDERECO */}
+          <div className="border-t border-slate-800/80 pt-4">
+            <h5 className="text-xs font-bold text-slate-200 flex items-center gap-1.5 mb-1">
+              <MapPin className="w-3.5 h-3.5 text-amber-400" />
+              Contato e endereço (usados no Google Maps e nos dados estruturados)
+            </h5>
+            <p className="text-[11px] text-slate-400 mb-4">
+              Preencha para o Google exibir a igreja com endereço, telefone e horário de culto.
+            </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <label className="text-[10px] font-mono text-slate-400 uppercase block">Telefone</label>
+                <input
+                  type="text"
+                  placeholder="(11) 99999-9999"
+                  value={contactPhone}
+                  onChange={(e) => setContactPhone(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 outline-none focus:border-amber-500 font-mono"
+                />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <label className="text-[10px] font-mono text-slate-400 uppercase block">Rua / Avenida</label>
+                <input
+                  type="text"
+                  placeholder="Rua Exemplo da Fé"
+                  value={addressStreet}
+                  onChange={(e) => setAddressStreet(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 outline-none focus:border-amber-500"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-mono text-slate-400 uppercase block">Número</label>
+                <input
+                  type="text"
+                  placeholder="123"
+                  value={addressNumber}
+                  onChange={(e) => setAddressNumber(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 outline-none focus:border-amber-500 font-mono"
+                />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <label className="text-[10px] font-mono text-slate-400 uppercase block">Bairro</label>
+                <input
+                  type="text"
+                  placeholder="Centro"
+                  value={addressNeighborhood}
+                  onChange={(e) => setAddressNeighborhood(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 outline-none focus:border-amber-500"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-mono text-slate-400 uppercase block">Cidade</label>
+                <input
+                  type="text"
+                  placeholder="Itaquaquecetuba"
+                  value={addressCity}
+                  onChange={(e) => setAddressCity(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 outline-none focus:border-amber-500"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-mono text-slate-400 uppercase block">UF</label>
+                <input
+                  type="text"
+                  placeholder="SP"
+                  maxLength={2}
+                  value={addressState}
+                  onChange={(e) => setAddressState(e.target.value.toUpperCase())}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 outline-none focus:border-amber-500 font-mono"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-mono text-slate-400 uppercase block">CEP</label>
+                <input
+                  type="text"
+                  placeholder="08570-000"
+                  value={addressZip}
+                  onChange={(e) => setAddressZip(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 outline-none focus:border-amber-500 font-mono"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end pt-4 border-t border-slate-800/80">
+            <button
+              type="button"
+              onClick={() => handleSave()}
+              disabled={saving}
+              className="py-2.5 px-6 rounded-xl bg-amber-400 hover:bg-amber-500 text-slate-950 font-bold text-xs flex items-center gap-2 cursor-pointer shadow-md transition-all disabled:opacity-50"
+            >
+              <Save className="w-4 h-4" />
+              <span>{saving ? "Salvando..." : "Salvar Configurações de SEO"}</span>
             </button>
           </div>
         </div>

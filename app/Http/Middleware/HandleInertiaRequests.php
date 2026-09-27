@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\SeoService;
 use Closure;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -28,6 +29,22 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         return array_merge(parent::share($request), [
+            /*
+                SEO da pagina: definido pelo controller ou o padrao do config/seo.php.
+                Precisa ser closure: o Inertia resolve as props DEPOIS do controller
+                responder, e ai o SeoService ja foi preenchido. O noindex e automatico
+                em /admin, /login, /api e areas privadas.
+            */
+            'seo' => function () use ($request) {
+                $seo = SeoService::pegar();
+
+                if (SeoService::urlPrivada($request->path())) {
+                    $seo->noIndex();
+                }
+
+                return $seo->toArray();
+            },
+
             // Compartilha o usuario autenticado com o frontend
             'auth' => [
                 'user' => $request->user() ? [

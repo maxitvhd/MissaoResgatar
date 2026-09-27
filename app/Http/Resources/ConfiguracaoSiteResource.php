@@ -31,6 +31,20 @@ class ConfiguracaoSiteResource extends JsonResource
             'pressEmail'                 => $this->email_imprensa,
             'pressMaterialLink'          => $this->link_material_imprensa,
             'pressCredLink'              => $this->link_credencial_imprensa,
+
+            // SEO (usados no title, description, og:image e JSON-LD)
+            'seoTitle'           => $this->titulo_site,
+            'seoDescription'     => $this->meta_description,
+            'seoKeywords'        => $this->palavras_chave,
+            'seoOgImage'         => $this->imagem_og,
+            'seoTwitterSite'     => $this->twitter_site,
+            'contactPhone'       => $this->telefone,
+            'addressStreet'      => $this->endereco_rua,
+            'addressNumber'      => $this->endereco_numero,
+            'addressNeighborhood'=> $this->endereco_bairro,
+            'addressCity'        => $this->endereco_cidade,
+            'addressState'       => $this->endereco_estado,
+            'addressZip'         => $this->endereco_cep,
         ];
     }
 }

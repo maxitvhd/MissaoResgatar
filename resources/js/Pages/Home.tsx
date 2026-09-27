@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import {
   MapPin, Calendar, Clock, Star, Users, Phone, ArrowRight, ShieldCheck, Mail, FileText,
-  Sparkles, CheckCircle2, ExternalLink, Instagram, Facebook, Youtube, ImageIcon
+  Sparkles, CheckCircle2, ExternalLink, Instagram, Facebook, Youtube, ImageIcon, RefreshCw
 } from "lucide-react";
 import MainLayout from "../Layouts/MainLayout";
 import PhotoGallery from "../Components/PhotoGallery";
@@ -28,6 +28,8 @@ export default function Home(props: HomeProps) {
   const patrocinadores = (props.patrocinadores as any)?.data ?? props.patrocinadores ?? [];
   const regulamentos = (props.regulamentos as any)?.data ?? props.regulamentos ?? [];
   const configuracoes = (props.configuracoes as any)?.data ?? props.configuracoes ?? null;
+  const [candidateEvents, setCandidateEvents] = useState<AgendaEvent[]>([]);
+  const [activeEventIndex, setActiveEventIndex] = useState<number>(0);
   const [activeEvent, setActiveEvent] = useState<AgendaEvent | null>(null);
   const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
 
@@ -46,64 +48,81 @@ export default function Home(props: HomeProps) {
   const [caravanError, setCaravanError] = useState<string>("");
 
   useEffect(() => {
-    const calculateCountdown = () => {
-      const now = Date.now();
+    const now = Date.now();
 
-      // Filtra os eventos futuros da agenda e ordena do mais próximo para o mais distante
-      const upcoming = eventos
-        .filter((ev: any) => ev && ev.dateTime && !isNaN(new Date(ev.dateTime).getTime()))
-        .map((ev: any) => ({
+    // Filtra os eventos futuros da agenda e ordena do mais próximo para o mais distante
+    const upcoming = eventos
+      .map((ev: any) => {
+        const targetDateStr = ev.nextDateTime || ev.dateTime;
+        const timeValue = targetDateStr ? new Date(targetDateStr).getTime() : 0;
+        return {
           ...ev,
-          timeValue: new Date(ev.dateTime).getTime(),
-        }))
-        .filter((ev: any) => ev.timeValue > now)
-        .sort((a: any, b: any) => a.timeValue - b.timeValue);
-
-      if (upcoming.length > 0) {
-        // Seleciona o evento mais próximo
-        const nextEvent = upcoming[0];
-        setActiveEvent(nextEvent);
-
-        const diff = Math.max(0, nextEvent.timeValue - now);
-        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
-        const minutes = Math.floor((diff / (1000 * 60)) % 60);
-        const seconds = Math.floor((diff / 1000) % 60);
-
-        setCountdown({ days, hours, minutes, seconds });
-      } else {
-        // Fallback dinâmico: se todos os eventos já passaram, conta para o próximo domingo às 19h (Culto de Celebração)
-        const d = new Date();
-        const day = d.getDay();
-        const diffDays = (7 - day) % 7;
-        d.setDate(d.getDate() + (diffDays === 0 && d.getHours() >= 21 ? 7 : diffDays));
-        d.setHours(19, 0, 0, 0);
-
-        const fallbackEvent: AgendaEvent = {
-          id: "culto-semanal",
-          title: "Culto de Celebração & Família",
-          description: "Reunião de louvor e palavra no templo da Missão Resgatar.",
-          location: "Templo Central Missão Resgatar",
-          dateTime: d.toISOString(),
-          image: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=800&q=80",
+          targetDateStr,
+          timeValue,
         };
+      })
+      .filter((ev: any) => ev.timeValue > now)
+      .sort((a: any, b: any) => a.timeValue - b.timeValue);
 
-        setActiveEvent(fallbackEvent);
+    if (upcoming.length > 0) {
+      setCandidateEvents(upcoming);
+    } else {
+      // Fallback dinâmico: se todos os eventos já passaram, conta para o próximo domingo às 19h (Culto de Celebração)
+      const d = new Date();
+      const day = d.getDay();
+      const diffDays = (7 - day) % 7;
+      d.setDate(d.getDate() + (diffDays === 0 && d.getHours() >= 21 ? 7 : diffDays));
+      d.setHours(19, 0, 0, 0);
 
-        const diff = Math.max(0, d.getTime() - now);
-        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
-        const minutes = Math.floor((diff / (1000 * 60)) % 60);
-        const seconds = Math.floor((diff / 1000) % 60);
+      const fallbackEvent: AgendaEvent = {
+        id: "culto-semanal",
+        title: "Culto de Celebração & Família",
+        description: "Reunião de louvor e palavra no templo da Missão Resgatar.",
+        location: "Templo Central Missão Resgatar",
+        dateTime: d.toISOString(),
+        nextDateTime: d.toISOString(),
+        recurrence: "semanal",
+        image: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=800&q=80",
+      };
 
-        setCountdown({ days, hours, minutes, seconds });
-      }
+      setCandidateEvents([fallbackEvent]);
+    }
+  }, [eventos]);
+
+  // Rotaciona automaticamente entre os eventos candidatos (ex: Culto Semanal x Evento Especial) a cada 8 segundos
+  useEffect(() => {
+    if (candidateEvents.length <= 1) return;
+    const slideInterval = setInterval(() => {
+      setActiveEventIndex((prev) => (prev + 1) % candidateEvents.length);
+    }, 8000);
+    return () => clearInterval(slideInterval);
+  }, [candidateEvents]);
+
+  // Atualiza o contador regressivo em tempo real para o evento ativo
+  useEffect(() => {
+    if (candidateEvents.length === 0) return;
+    const currentEv = candidateEvents[activeEventIndex] || candidateEvents[0];
+    if (!currentEv) return;
+
+    setActiveEvent(currentEv);
+
+    const updateTimer = () => {
+      const now = Date.now();
+      const targetTime = currentEv.timeValue || new Date(currentEv.nextDateTime || currentEv.dateTime).getTime();
+      const diff = Math.max(0, targetTime - now);
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+      const minutes = Math.floor((diff / (1000 * 60)) % 60);
+      const seconds = Math.floor((diff / 1000) % 60);
+
+      setCountdown({ days, hours, minutes, seconds });
     };
 
-    calculateCountdown();
-    const interval = setInterval(calculateCountdown, 1000);
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
     return () => clearInterval(interval);
-  }, [eventos]);
+  }, [candidateEvents, activeEventIndex]);
 
   const handleCaravanSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -211,8 +230,17 @@ export default function Home(props: HomeProps) {
         <div className="max-w-6xl mx-auto px-4 relative z-10 w-full text-center py-16 sm:py-24">
 
           <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-400 text-xs font-mono mb-6 uppercase tracking-wider glow-accent">
-            <Clock className="w-3.5 h-3.5 text-amber-400" />
-            <span>{activeEvent ? `PRÓXIMO EVENTO: ${activeEvent.title.toUpperCase()}` : t("home.badge")}</span>
+            {activeEvent?.isFeatured ? (
+              <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400 animate-pulse" />
+            ) : activeEvent?.recurrence && activeEvent.recurrence !== 'nenhuma' ? (
+              <RefreshCw className="w-3.5 h-3.5 text-amber-400" />
+            ) : (
+              <Clock className="w-3.5 h-3.5 text-amber-400" />
+            )}
+            <span>
+              {activeEvent?.isFeatured ? "⭐ DESTAQUE ESPECIAL: " : activeEvent?.recurrence && activeEvent.recurrence !== 'nenhuma' ? "🗓 EVENTO RECORRENTE: " : "PRÓXIMO EVENTO: "}
+              {activeEvent ? activeEvent.title.toUpperCase() : t("home.badge")}
+            </span>
           </div>
 
           <h1 className="text-4xl sm:text-6xl md:text-7xl font-serif font-bold text-slate-100 tracking-tight leading-none uppercase">
@@ -245,6 +273,23 @@ export default function Home(props: HomeProps) {
                 <span className="truncate">Contagem regressiva: <strong className="text-amber-400 font-semibold">{activeEvent.title}</strong></span>
               </div>
             )}
+
+            {candidateEvents.length > 1 && (
+              <div className="flex items-center justify-center gap-2 mt-4">
+                {candidateEvents.map((ev, idx) => (
+                  <button
+                    key={ev.id || idx}
+                    onClick={() => setActiveEventIndex(idx)}
+                    title={ev.title}
+                    className={`h-2 rounded-full transition-all cursor-pointer ${
+                      idx === activeEventIndex
+                        ? "w-7 bg-amber-400"
+                        : "w-2 bg-slate-700 hover:bg-slate-500"
+                    }`}
+                  />
+                ))}
+              </div>
+            )}
           </div>
 
           {/* QUICK INFOS WRAPPER */}
@@ -272,13 +317,13 @@ export default function Home(props: HomeProps) {
               <div className="text-left overflow-hidden">
                 <span className="text-[10px] font-mono uppercase text-slate-400 tracking-wider">Data do Evento</span>
                 <h4 className="text-xs sm:text-sm font-bold text-slate-200 mt-0.5 capitalize truncate">
-                  {activeEvent?.dateTime
-                    ? new Date(activeEvent.dateTime).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })
+                  {(activeEvent?.nextDateTime || activeEvent?.dateTime)
+                    ? new Date(activeEvent.nextDateTime || activeEvent.dateTime!).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })
                     : t("home.qiDateValue")}
                 </h4>
                 <p className="text-[10px] text-slate-500 font-mono capitalize">
-                  {activeEvent?.dateTime
-                    ? new Date(activeEvent.dateTime).toLocaleDateString('pt-BR', { weekday: 'long' })
+                  {(activeEvent?.nextDateTime || activeEvent?.dateTime)
+                    ? new Date(activeEvent.nextDateTime || activeEvent.dateTime!).toLocaleDateString('pt-BR', { weekday: 'long' })
                     : t("home.qiDateSub")}
                 </p>
               </div>
@@ -291,8 +336,8 @@ export default function Home(props: HomeProps) {
               <div className="text-left overflow-hidden">
                 <span className="text-[10px] font-mono uppercase text-slate-400 tracking-wider">Horário de Início</span>
                 <h4 className="text-xs sm:text-sm font-bold text-slate-200 mt-0.5">
-                  {activeEvent?.dateTime
-                    ? new Date(activeEvent.dateTime).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) + "h"
+                  {(activeEvent?.nextDateTime || activeEvent?.dateTime)
+                    ? new Date(activeEvent.nextDateTime || activeEvent.dateTime!).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) + "h"
                     : t("home.qiTimeValue")}
                 </h4>
                 <p className="text-[10px] text-slate-500 font-mono">Horário Oficial de Brasília</p>
@@ -341,15 +386,25 @@ export default function Home(props: HomeProps) {
                   </div>
                   <div className="sm:w-2/3 p-6 flex flex-col justify-between text-left">
                     <div>
-                      <div className="flex flex-wrap items-center gap-3 mb-2 text-[11px] font-mono text-amber-400">
-                        <span className="flex items-center">
+                      <div className="flex flex-wrap items-center gap-2 mb-2 text-[11px] font-mono">
+                        <span className="flex items-center text-amber-400">
                           <Calendar className="w-3 h-3 mr-1" />
-                          {new Date(event.dateTime).toLocaleDateString('pt-BR')}
+                          {new Date(event.nextDateTime || event.dateTime).toLocaleDateString('pt-BR')}
                         </span>
-                        <span className="flex items-center">
+                        <span className="flex items-center text-amber-400">
                           <Clock className="w-3 h-3 mr-1" />
-                          {new Date(event.dateTime).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                          {new Date(event.nextDateTime || event.dateTime).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                         </span>
+                        {event.isFeatured && (
+                          <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center gap-1">
+                            <Star className="w-2.5 h-2.5 fill-amber-400" /> Destaque
+                          </span>
+                        )}
+                        {event.recurrence && event.recurrence !== 'nenhuma' && (
+                          <span className="px-1.5 py-0.5 rounded text-[9px] bg-blue-500/20 text-blue-400 border border-blue-500/30 flex items-center gap-1 uppercase">
+                            <RefreshCw className="w-2.5 h-2.5" /> {event.recurrence}
+                          </span>
+                        )}
                       </div>
                       <h4 className="text-base sm:text-lg font-serif font-bold text-slate-100 group-hover:text-amber-400 transition-colors">{event.title}</h4>
                       <p className="text-xs text-slate-400 mt-2 leading-relaxed line-clamp-3">{event.description}</p>

@@ -83,6 +83,8 @@ export default function AdminDashboard() {
   const [eventLoc, setEventLoc] = useState<string>("");
   const [eventDateTime, setEventDateTime] = useState<string>("");
   const [eventImage, setEventImage] = useState<string>("");
+  const [eventRecurrence, setEventRecurrence] = useState<'nenhuma' | 'semanal' | 'quinzenal' | 'mensal'>("nenhuma");
+  const [eventIsFeatured, setEventIsFeatured] = useState<boolean>(false);
   const [editingEventId, setEditingEventId] = useState<string | null>(null);
   const [uploadingEventImg, setUploadingEventImg] = useState<boolean>(false);
 
@@ -514,7 +516,9 @@ export default function AdminDashboard() {
           description: eventDesc,
           location: eventLoc,
           dateTime: eventDateTime,
-          image: eventImage || undefined
+          image: eventImage || undefined,
+          recurrence: eventRecurrence,
+          isFeatured: eventIsFeatured,
         });
         setEvents(events.map(ev => ev.id === editingEventId ? updated : ev));
         setEditingEventId(null);
@@ -525,7 +529,9 @@ export default function AdminDashboard() {
           description: eventDesc,
           location: eventLoc,
           dateTime: eventDateTime,
-          image: eventImage || undefined
+          image: eventImage || undefined,
+          recurrence: eventRecurrence,
+          isFeatured: eventIsFeatured,
         });
         setEvents([created, ...events]);
         triggerSuccess("Evento criado com sucesso na agenda!");
@@ -535,6 +541,8 @@ export default function AdminDashboard() {
       setEventLoc("");
       setEventDateTime("");
       setEventImage("");
+      setEventRecurrence("nenhuma");
+      setEventIsFeatured(false);
     } catch (err) {
       console.error(err);
     }
@@ -547,6 +555,8 @@ export default function AdminDashboard() {
     setEventLoc(item.location || "");
     setEventDateTime(item.dateTime);
     setEventImage(item.image || "");
+    setEventRecurrence(item.recurrence || "nenhuma");
+    setEventIsFeatured(item.isFeatured || false);
     triggerSuccess("Dados do evento preenchidos para edição!");
   };
 
@@ -1327,8 +1337,10 @@ export default function AdminDashboard() {
                           setEventLoc("");
                           setEventDateTime("");
                           setEventImage("");
+                          setEventRecurrence("nenhuma");
+                          setEventIsFeatured(false);
                         }}
-                        className="px-2 py-1 text-[10px] font-mono rounded bg-red-500/10 text-red-400 border border-red-500/20"
+                        className="px-2 py-1 text-[10px] font-mono rounded bg-red-500/10 text-red-400 border border-red-500/20 cursor-pointer"
                       >
                         Cancelar Edição
                       </button>
@@ -1340,7 +1352,7 @@ export default function AdminDashboard() {
                       <label className="text-[10px] font-mono text-slate-400 uppercase block mb-1">Título do Evento *</label>
                       <input 
                         type="text"
-                        placeholder="Ex: Caravana Unida Itaquaquecetuba"
+                        placeholder="Ex: Culto de Celebração & Família"
                         required
                         value={eventTitle}
                         onChange={(e) => setEventTitle(e.target.value)}
@@ -1348,7 +1360,7 @@ export default function AdminDashboard() {
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] font-mono text-slate-400 uppercase block mb-1">Data & Hora *</label>
+                      <label className="text-[10px] font-mono text-slate-400 uppercase block mb-1">Data & Hora Inicial *</label>
                       <input 
                         type="datetime-local"
                         required
@@ -1398,6 +1410,40 @@ export default function AdminDashboard() {
                     </div>
                   </div>
 
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-[10px] font-mono text-slate-400 uppercase block mb-1">Recorrência Automática</label>
+                      <select
+                        value={eventRecurrence}
+                        onChange={(e) => setEventRecurrence(e.target.value as any)}
+                        className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-slate-200 outline-none focus:border-amber-500 font-mono"
+                      >
+                        <option value="nenhuma">Nenhuma (Evento Único)</option>
+                        <option value="semanal">Semanal (Toda Semana)</option>
+                        <option value="quinzenal">Quinzenal (A cada 15 dias)</option>
+                        <option value="mensal">Mensal (Todo Mês)</option>
+                      </select>
+                      <p className="text-[9px] text-slate-500 mt-1 font-mono">O cronômetro avança a data automaticamente sem precisar recriar toda semana.</p>
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] font-mono text-slate-400 uppercase block mb-1">Destaque Especial no Banner</label>
+                      <button
+                        type="button"
+                        onClick={() => setEventIsFeatured(!eventIsFeatured)}
+                        className={`w-full p-2 rounded-lg border text-xs font-mono flex items-center justify-center gap-2 transition-colors cursor-pointer ${
+                          eventIsFeatured 
+                            ? "bg-amber-500/20 border-amber-500/50 text-amber-400 font-bold" 
+                            : "bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200"
+                        }`}
+                      >
+                        <Star className={`w-4 h-4 ${eventIsFeatured ? "fill-amber-400 text-amber-400" : ""}`} />
+                        <span>{eventIsFeatured ? "★ Destacado no Banner Principal" : "Tornar Evento Especial / Destaque"}</span>
+                      </button>
+                      <p className="text-[9px] text-slate-500 mt-1 font-mono">Eventos em destaque alternam no slide do cronômetro da página inicial.</p>
+                    </div>
+                  </div>
+
                   <div>
                     <label className="text-[10px] font-mono text-slate-400 uppercase block mb-1">Breve Descrição do Evento</label>
                     <textarea 
@@ -1424,10 +1470,22 @@ export default function AdminDashboard() {
                     {events.map((item) => (
                       <div key={item.id} className="p-3 bg-slate-900/40 border border-slate-800 rounded-lg flex items-center justify-between">
                         <div>
-                          <h4 className="text-xs font-semibold text-slate-200">{item.title}</h4>
-                          <span className="text-[9px] text-slate-500 font-mono flex items-center gap-2 mt-0.5">
-                            <Clock className="w-3 h-3" /> {new Date(item.dateTime).toLocaleString('pt-BR')} | 
-                            <MapPin className="w-3 h-3" /> {item.location}
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h4 className="text-xs font-semibold text-slate-200">{item.title}</h4>
+                            {item.isFeatured && (
+                              <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center gap-1">
+                                <Star className="w-2.5 h-2.5 fill-amber-400" /> Destaque
+                              </span>
+                            )}
+                            {item.recurrence && item.recurrence !== 'nenhuma' && (
+                              <span className="px-1.5 py-0.5 rounded text-[9px] font-mono bg-blue-500/20 text-blue-400 border border-blue-500/30 flex items-center gap-1 uppercase">
+                                <RefreshCw className="w-2.5 h-2.5 text-blue-400" /> {item.recurrence}
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-[9px] text-slate-500 font-mono flex items-center gap-2 mt-1">
+                            <Clock className="w-3 h-3 text-slate-400" /> {new Date(item.nextDateTime || item.dateTime).toLocaleString('pt-BR')} | 
+                            <MapPin className="w-3 h-3 text-slate-400" /> {item.location}
                           </span>
                         </div>
                         <div className="flex items-center gap-2">

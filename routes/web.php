@@ -18,6 +18,7 @@ use App\Http\Controllers\NoticiaController;
 use App\Http\Controllers\PaginaController;
 use App\Http\Controllers\PatrocinadorController;
 use App\Http\Controllers\RegulamentoController;
+use App\Http\Controllers\SeoController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\TraducaoController;
 use App\Http\Controllers\TransparenciaController;
@@ -43,8 +44,27 @@ Route::get('/transparencia', [TransparenciaController::class, 'paginaTransparenc
 Route::get('/aulas', [AulaFechadaController::class, 'paginaAulas'])->name('aulas')->middleware('auth');
 Route::get('/notas', [PaginaController::class, 'notas'])->name('notas')->middleware('auth');
 
+/*
+|--------------------------------------------------------------------------
+| Paginas de Detalhe (indexaveis - cada conteudo com URL propria)
+|--------------------------------------------------------------------------
+*/
+Route::get('/noticias/{noticia}', [PaginaController::class, 'noticiaDetalhe'])->name('noticias.detalhe');
+Route::get('/devocionais/{devocional}', [PaginaController::class, 'devocionalDetalhe'])->name('devocionais.detalhe');
+Route::get('/agenda/{evento}', [PaginaController::class, 'eventoDetalhe'])->name('agenda.detalhe');
+Route::get('/regulamentos/{regulamento}', [PaginaController::class, 'regulamentoDetalhe'])->name('regulamentos.detalhe');
+// Binding explicito por slug (o admin usa id nas rotas /admin/produtos)
+Route::get('/produtos/{produto:slug}', [LojaController::class, 'paginaProduto'])->name('produtos.detalhe');
+Route::get('/loja/categoria/{categoria:slug}', [LojaController::class, 'paginaCategoria'])->name('loja.categoria');
+
+/*
+|--------------------------------------------------------------------------
+| Arquivos de SEO e IA (buscadores e robots de inteligencia artificial)
+|--------------------------------------------------------------------------
+*/
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
-Route::get('/robots.txt', [SitemapController::class, 'robots'])->name('robots');
+Route::get('/robots.txt', [SeoController::class, 'robots'])->name('robots');
+Route::get('/llms.txt', [SeoController::class, 'llms'])->name('llms');
 
 /*
 |--------------------------------------------------------------------------

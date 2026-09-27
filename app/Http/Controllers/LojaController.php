@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\CategoriaProduto;
 use App\Models\Produto;
+use App\Services\LogService;
+use App\Services\SeoService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -14,16 +16,135 @@ class LojaController extends Controller
      */
     public function paginaLoja(Request $request)
     {
+        LogService::info('1 - renderizando pagina da loja');
+
         $categorias = CategoriaProduto::withCount('produtos')->get();
         $produtos = Produto::with('categoria')
             ->where('em_estoque', true)
             ->latest()
             ->get();
 
+        SeoService::atribuir(SeoService::daPagina()
+            ->titulo('Loja Oficial')
+            ->descricao('Compre produtos e materiais da Missão Resgatar. Livros, camisas, presentes e itens para a sua jornada de fé.')
+            ->palavrasChave(['loja da igreja', 'produtos cristãos', 'camiseta igreja'])
+            ->jsonLd($this->jsonLdListaProdutos($produtos)));
+
         return Inertia::render('Public/Loja', [
             'categorias' => $categorias,
             'produtos'   => $produtos->map(fn($p) => $this->formatarProduto($p)),
         ]);
+    }
+
+    /**
+     * Pagina de um produto (URL propria e indexavel).
+     */
+    public function paginaProduto(Produto $produto)
+    {
+        LogService::info('1 - renderizando produto', ['slug' => $produto->slug]);
+
+        $produto->load('categoria');
+
+        // Produto fora de estoque sai do indice de busca
+        $seo = SeoService::daPagina()
+            ->titulo($produto->nome)
+            ->descricao($produto->descricao ?: $produto->detalhes)
+            ->imagem($produto->imagem_url)
+            ->tipo('product')
+            ->palavrasChave([$produto->categoria?->nome])
+            ->jsonLd($this->jsonLdProduto($produto));
+
+        if (!$produto->em_estoque) {
+            $seo->noIndex();
+        }
+
+        SeoService::atribuir($seo);
+
+        return Inertia::render('Public/ProdutoDetalhe', [
+            'produto' => $this->formatarProduto($produto),
+        ]);
+    }
+
+    /**
+     * Pagina de uma categoria de produtos (URL propria e indexavel).
+     */
+    public function paginaCategoria(CategoriaProduto $categoria)
+    {
+        LogService::info('1 - renderizando categoria da loja', ['slug' => $categoria->slug]);
+
+        $produtos = Produto::where('categoria_id', $categoria->id)
+            ->where('em_estoque', true)
+            ->latest()
+            ->get();
+
+        SeoService::atribuir(SeoService::daPagina()
+            ->titulo($categoria->nome)
+            ->descricao($categoria->descricao ?: "Produtos da categoria {$categoria->nome} na loja da Missão Resgatar.")
+            ->palavrasChave([$categoria->nome, 'loja da igreja'])
+            ->jsonLd($this->jsonLdListaProdutos($produtos)));
+
+        return Inertia::render('Public/Loja', [
+            'categorias' => CategoriaProduto::withCount('produtos')->get(),
+            'produtos'   => $produtos->map(fn($p) => $this->formatarProduto($p)),
+            'categoriaAtiva' => [
+                'id'   => (string) $categoria->id,
+                'nome' => $categoria->nome,
+                'slug' => $categoria->slug,
+            ],
+        ]);
+    }
+
+    /**
+     * Dados estruturados de um produto (preco e disponibilidade no Google).
+     */
+    private function jsonLdProduto(Produto $produto): array
+    {
+        $preco = $produto->preco_desconto ?: $produto->preco;
+
+        return array_filter([
+            '@context' => 'https://schema.org',
+            '@type' => 'Product',
+            'name' => $produto->nome,
+            'description' => SeoService::daPagina()->resumir($produto->descricao ?: $produto->detalhes, 300),
+            'image' => $produto->imagem_url ?: ($produto->imagens_galeria[0] ?? null),
+            'category' => $produto->categoria?->nome,
+            'sku' => (string) $produto->id,
+            'url' => route('produtos.detalhe', $produto->slug),
+            'offers' => array_filter([
+                '@type' => 'Offer',
+                'price' => number_format((float) $preco, 2, '.', ''),
+                'priceCurrency' => 'BRL',
+                'availability' => $produto->em_estoque
+                    ? 'https://schema.org/InStock'
+                    : 'https://schema.org/OutOfStock',
+                'url' => route('produtos.detalhe', $produto->slug),
+                'seller' => ['@id' => rtrim(config('app.url'), '/') . '/#igreja'],
+            ]),
+        ]);
+    }
+
+    /**
+     * Dados estruturados da lista de produtos (ItemList).
+     */
+    private function jsonLdListaProdutos($produtos): array
+    {
+        if ($produtos->isEmpty()) {
+            return [];
+        }
+
+        return [
+            '@context' => 'https://schema.org',
+            '@type' => 'ItemList',
+            'name' => 'Loja ' . config('app.name'),
+            'url' => route('loja'),
+            'numberOfItems' => $produtos->count(),
+            'itemListElement' => $produtos->take(30)->values()->map(fn($p, $i) => [
+                '@type' => 'ListItem',
+                'position' => $i + 1,
+                'url' => route('produtos.detalhe', $p->slug),
+                'name' => $p->nome,
+            ])->all(),
+        ];
     }
 
     /**

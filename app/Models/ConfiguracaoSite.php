@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * Model: ConfiguracaoSite.
@@ -14,6 +15,9 @@ class ConfiguracaoSite extends Model
     use HasFactory;
 
     protected $table = 'configuracoes_site';
+
+    // Chave do cache curto usado pelo SEO
+    private const CACHE_SEO = 'seo_configuracoes_site';
 
     protected $fillable = [
         'url_video_fundo',
@@ -34,6 +38,18 @@ class ConfiguracaoSite extends Model
         'email_imprensa',
         'link_material_imprensa',
         'link_credencial_imprensa',
+        'titulo_site',
+        'meta_description',
+        'palavras_chave',
+        'imagem_og',
+        'twitter_site',
+        'telefone',
+        'endereco_rua',
+        'endereco_numero',
+        'endereco_bairro',
+        'endereco_cidade',
+        'endereco_estado',
+        'endereco_cep',
     ];
 
     protected $casts = [
@@ -71,5 +87,30 @@ class ConfiguracaoSite extends Model
     public static function obter(): self
     {
         return self::firstOrCreate(['id' => 1]);
+    }
+
+    /**
+     * Igual ao obter(), mas com cache curto (usado pelo SEO e sitemap, que
+     * sao lidos a cada visita de robo). O cache e limpo ao salvar.
+     */
+    public static function obterCacheado(): self
+    {
+        return Cache::remember(self::CACHE_SEO, 600, fn() => self::obter());
+    }
+
+    /**
+     * Limpa o cache das configuracoes (chamado ao salvar).
+     */
+    public static function limparCache(): void
+    {
+        Cache::forget(self::CACHE_SEO);
+    }
+
+    /**
+     * Ao salvar, limpa o cache para o SEO nao ficar com dados defasados.
+     */
+    protected static function booted(): void
+    {
+        static::saved(fn() => self::limparCache());
     }
 }

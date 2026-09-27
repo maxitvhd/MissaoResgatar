@@ -19,12 +19,16 @@ use App\Http\Resources\NoticiaResource;
 use App\Http\Resources\PatrocinadorResource;
 use App\Http\Resources\RegulamentoResource;
 use App\Services\LogService;
+use App\Services\SeoService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 /**
  * Controlador das paginas publicas (frontend Inertia).
  * Renderiza as views React com os dados do banco via Inertia.
+ *
+ * Cada metodo registra o SEO da pagina (titulo, descricao, Open Graph,
+ * Twitter Card e dados estruturados) antes de devolver a view.
  */
 class PaginaController extends Controller
 {
@@ -34,6 +38,10 @@ class PaginaController extends Controller
     public function home()
     {
         LogService::info('1 - renderizando pagina home');
+
+        // A home usa o titulo/descricao globais (configuracoes_site ou config/seo.php)
+        SeoService::atribuir(SeoService::daPagina()
+            ->jsonLd($this->jsonLdWebSite()));
 
         return Inertia::render('Home', [
             'noticias'   => NoticiaResource::collection(Noticia::with('comentarios')->orderByDesc('created_at')->get()),
@@ -53,8 +61,52 @@ class PaginaController extends Controller
     {
         LogService::info('1 - renderizando pagina de noticias');
 
+        SeoService::atribuir(SeoService::daPagina()
+            ->titulo('Notícias e Blog')
+            ->descricao('Comunicados, arte e artigos da Missão Resgatar. Fique por dentro do que acontece na igreja.')
+            ->palavrasChave(['notícias da igreja', 'blog cristão', 'comunicados']));
+
         return Inertia::render('Public/Noticias', [
             'noticias' => NoticiaResource::collection(Noticia::with('comentarios')->orderByDesc('created_at')->get()),
+        ]);
+    }
+
+    /**
+     * Detalhe de uma noticia (URL propria, indexavel).
+     */
+    public function noticiaDetalhe(Noticia $noticia)
+    {
+        LogService::info('1 - renderizando noticia', ['id' => $noticia->id]);
+
+        $noticia->load('comentarios');
+
+        SeoService::atribuir(SeoService::daPagina()
+            ->titulo($noticia->titulo)
+            ->descricao($noticia->conteudo)
+            ->imagem($noticia->imagem)
+            ->tipo('article')
+            ->palavrasChave([$noticia->categoria])
+            ->jsonLd(array_filter([
+                '@context' => 'https://schema.org',
+                '@type' => 'NewsArticle',
+                'headline' => $noticia->titulo,
+                'description' => SeoService::daPagina()->resumir($noticia->conteudo, 200),
+                'image' => $noticia->imagem,
+                'datePublished' => $noticia->created_at?->toAtomString(),
+                'dateModified' => $noticia->updated_at?->toAtomString(),
+                'author' => $noticia->autor ? [
+                    '@type' => 'Person',
+                    'name' => $noticia->autor,
+                ] : null,
+                'articleSection' => $noticia->categoria,
+                'publisher' => [
+                    '@id' => rtrim(config('app.url'), '/') . '/#igreja',
+                ],
+                'mainEntityOfPage' => route('noticias.detalhe', $noticia->id),
+            ])));
+
+        return Inertia::render('Public/NoticiaDetalhe', [
+            'noticia' => new NoticiaResource($noticia),
         ]);
     }
 
@@ -65,8 +117,40 @@ class PaginaController extends Controller
     {
         LogService::info('1 - renderizando pagina de devocionais');
 
+        SeoService::atribuir(SeoService::daPagina()
+            ->titulo('Devocionais Diários')
+            ->descricao('Mensagens bíblicas diárias para fortalecer a sua fé. Reflexão, escritura e oração todos os dias.')
+            ->palavrasChave(['devocional diário', 'reflexão bíblica', 'oração diaria']));
+
         return Inertia::render('Public/Devocionais', [
             'devocionais' => DevocionalResource::collection(Devocional::orderByDesc('created_at')->get()),
+        ]);
+    }
+
+    /**
+     * Detalhe de um devocional (URL propria, indexavel).
+     */
+    public function devocionalDetalhe(Devocional $devocional)
+    {
+        LogService::info('1 - renderizando devocional', ['id' => $devocional->id]);
+
+        SeoService::atribuir(SeoService::daPagina()
+            ->titulo($devocional->titulo)
+            ->descricao($devocional->conteudo)
+            ->palavrasChave([$devocional->categoria])
+            ->jsonLd(array_filter([
+                '@context' => 'https://schema.org',
+                '@type' => 'Article',
+                'headline' => $devocional->titulo,
+                'description' => SeoService::daPagina()->resumir($devocional->conteudo, 200),
+                'datePublished' => $devocional->created_at?->toAtomString(),
+                'articleSection' => $devocional->categoria,
+                'publisher' => ['@id' => rtrim(config('app.url'), '/') . '/#igreja'],
+                'mainEntityOfPage' => route('devocionais.detalhe', $devocional->id),
+            ])));
+
+        return Inertia::render('Public/DevocionalDetalhe', [
+            'devocional' => new DevocionalResource($devocional),
         ]);
     }
 
@@ -76,6 +160,11 @@ class PaginaController extends Controller
     public function biblia()
     {
         LogService::info('1 - renderizando pagina da biblia');
+
+        SeoService::atribuir(SeoService::daPagina()
+            ->titulo('Bíblia Online')
+            ->descricao('Leia a Bíblia online com versículos do dia e cartões de oração. Leitura gratuită para todos os dias.')
+            ->palavrasChave(['bíblia online', 'versículo do dia', 'leitura bíblica']));
 
         return Inertia::render('Public/Biblia');
     }
@@ -87,15 +176,24 @@ class PaginaController extends Controller
     {
         LogService::info('1 - renderizando pagina da radio');
 
+        SeoService::atribuir(SeoService::daPagina()
+            ->titulo('Rádio Online')
+            ->descricao('Ouça a Rádio Resgatar 24 horas por dia. Música cristã, louvor e palavra de Deus ao vivo.')
+            ->palavrasChave(['rádio cristã', 'rádio online', 'música gospel']));
+
         return Inertia::render('Public/Radio');
     }
 
     /**
-     * Secao de anotacoes pessoais (requer login).
+     * Secao de anotacoes pessoais (requer login, nunca indexada).
      */
     public function notas(Request $request)
     {
         LogService::info('1 - renderizando pagina de anotacoes', ['usuario_id' => $request->user()?->id]);
+
+        SeoService::atribuir(SeoService::daPagina()
+            ->titulo('Minhas Anotações')
+            ->noIndex());
 
         return Inertia::render('Public/Notas');
     }
@@ -107,8 +205,28 @@ class PaginaController extends Controller
     {
         LogService::info('1 - renderizando pagina da galeria');
 
+        $fotos = Galeria::orderByDesc('created_at')->get();
+
+        SeoService::atribuir(SeoService::daPagina()
+            ->titulo('Galeria de Fotos')
+            ->descricao('Fotos dos cultos, louvor, adoração, batismos, comunhão e ação social da Missão Resgatar.')
+            ->imagem($fotos->first()?->url)
+            ->palavrasChave(['fotos da igreja', 'galeria de cultos'])
+            ->jsonLd(array_filter([
+                '@context' => 'https://schema.org',
+                '@type' => 'ImageGallery',
+                'name' => 'Galeria de Fotos - ' . config('app.name'),
+                'url' => route('galeria'),
+                'numberOfItems' => $fotos->count(),
+                'image' => $fotos->take(30)->map(fn($foto) => [
+                    '@type' => 'ImageObject',
+                    'contentUrl' => $foto->url,
+                    'caption' => $foto->titulo,
+                ])->all(),
+            ])));
+
         return Inertia::render('Public/Galeria', [
-            'galeria' => GaleriaResource::collection(Galeria::orderByDesc('created_at')->get()),
+            'galeria' => GaleriaResource::collection($fotos),
         ]);
     }
 
@@ -119,8 +237,106 @@ class PaginaController extends Controller
     {
         LogService::info('1 - renderizando pagina de regulamentos');
 
+        SeoService::atribuir(SeoService::daPagina()
+            ->titulo('Regulamentos')
+            ->descricao('Normas de participação, termos e regras dos eventos e encontros da Missão Resgatar.')
+            ->palavrasChave(['regulamentos da igreja', 'participação de eventos']));
+
         return Inertia::render('Public/Regulamentos', [
             'regulamentos' => RegulamentoResource::collection(Regulamento::orderBy('categoria')->get()),
+        ]);
+    }
+
+    /**
+     * Detalhe de um regulamento (URL propria, indexavel).
+     */
+    public function regulamentoDetalhe(Regulamento $regulamento)
+    {
+        LogService::info('1 - renderizando regulamento', ['id' => $regulamento->id]);
+
+        SeoService::atribuir(SeoService::daPagina()
+            ->titulo($regulamento->titulo)
+            ->descricao($regulamento->descricao)
+            ->palavrasChave([$regulamento->categoria]));
+
+        return Inertia::render('Public/RegulamentoDetalhe', [
+            'regulamento' => new RegulamentoResource($regulamento),
+        ]);
+    }
+
+    /**
+     * Detalhe de um evento da agenda (URL propria, indexavel).
+     */
+    public function eventoDetalhe(EventoAgenda $evento)
+    {
+        LogService::info('1 - renderizando evento da agenda', ['id' => $evento->id]);
+
+        SeoService::atribuir(SeoService::daPagina()
+            ->titulo($evento->titulo)
+            ->descricao($evento->descricao ?: 'Participe do ' . $evento->titulo . ' na Missão Resgatar.')
+            ->imagem($evento->imagem)
+            ->palavrasChave(['agenda da igreja', $evento->local ? 'eventos em ' . $evento->local : null])
+            ->jsonLd($this->jsonLdEvento($evento)));
+
+        return Inertia::render('Public/EventoDetalhe', [
+            'evento' => new EventoAgendaResource($evento),
+        ]);
+    }
+
+    /**
+     * Dados estruturados de um evento (aparece no Google com data e local).
+     */
+    private function jsonLdEvento(EventoAgenda $evento): array
+    {
+        $dados = [
+            '@context' => 'https://schema.org',
+            '@type' => 'Event',
+            'name' => $evento->titulo,
+            'description' => $evento->descricao,
+            'image' => $evento->imagem,
+            'startDate' => $evento->data_hora?->toAtomString(),
+            'eventStatus' => 'https://schema.org/EventScheduled',
+            'eventAttendanceMode' => 'https://schema.org/OfflineEventAttendanceMode',
+            'organizer' => [
+                '@id' => rtrim(config('app.url'), '/') . '/#igreja',
+            ],
+            'url' => route('agenda.detalhe', $evento->id),
+        ];
+
+        if ($evento->local) {
+            $dados['location'] = [
+                '@type' => 'Place',
+                'name' => $evento->local,
+                'address' => array_filter([
+                    '@type' => 'PostalAddress',
+                    'addressLocality' => $evento->local,
+                ]),
+            ];
+        }
+
+        return array_filter($dados);
+    }
+
+    /**
+     * Dados estruturados do site (com area de busca, p/ autoridade no Google).
+     */
+    private function jsonLdWebSite(): array
+    {
+        return array_filter([
+            '@context' => 'https://schema.org',
+            '@type' => 'WebSite',
+            'name' => config('app.name'),
+            'url' => rtrim(config('app.url'), '/') . '/',
+            'inLanguage' => config('seo.idioma'),
+            'publisher' => ['@id' => rtrim(config('app.url'), '/') . '/#igreja'],
+            'potentialAction' => [
+                '@type' => 'SearchAction',
+                'target' => [
+                    '@type' => 'EntryPoint',
+                    'urlTemplate' => rtrim(config('app.url'), '/') . '/noticias?busca={search_term_string}',
+                ],
+                'query-input' => 'required name=search_term_string',
+            ],
         ]);
     }
 }

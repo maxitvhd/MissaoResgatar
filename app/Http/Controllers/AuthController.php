@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Services\LogService;
 use Illuminate\Http\Request;
+use App\Services\SeoService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
@@ -21,6 +22,9 @@ class AuthController extends Controller
      */
     public function mostrarLogin()
     {
+        // Telas de login nunca devem entrar no indice dos buscadores
+        SeoService::atribuir(SeoService::daPagina()->titulo('Acessar Altar')->noIndex());
+
         return Inertia::render('Auth/Login');
     }
 
@@ -55,6 +59,8 @@ class AuthController extends Controller
      */
     public function mostrarRegistro()
     {
+        SeoService::atribuir(SeoService::daPagina()->titulo('Criar Conta')->noIndex());
+
         return Inertia::render('Auth/Register');
     }
 

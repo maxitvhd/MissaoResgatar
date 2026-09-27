@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\ConfiguracaoSite;
 use App\Http\Resources\ConfiguracaoSiteResource;
+use App\Models\ConfiguracaoSite;
 use App\Services\LogService;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Http\Request;
 
 /**
@@ -49,10 +50,29 @@ class ConfiguracaoController extends Controller
             'email_imprensa'              => ['sometimes', 'nullable'],
             'link_material_imprensa'      => ['sometimes', 'nullable'],
             'link_credencial_imprensa'    => ['sometimes', 'nullable'],
+
+            // SEO
+            'titulo_site'        => ['sometimes', 'nullable', 'string', 'max:255'],
+            'meta_description'   => ['sometimes', 'nullable', 'string', 'max:500'],
+            'palavras_chave'     => ['sometimes', 'nullable', 'string', 'max:500'],
+            'imagem_og'          => ['sometimes', 'nullable', 'string', 'max:255'],
+            'twitter_site'       => ['sometimes', 'nullable', 'string', 'max:255'],
+            'telefone'           => ['sometimes', 'nullable', 'string', 'max:50'],
+            'endereco_rua'       => ['sometimes', 'nullable', 'string', 'max:255'],
+            'endereco_numero'    => ['sometimes', 'nullable', 'string', 'max:20'],
+            'endereco_bairro'    => ['sometimes', 'nullable', 'string', 'max:120'],
+            'endereco_cidade'    => ['sometimes', 'nullable', 'string', 'max:120'],
+            'endereco_estado'    => ['sometimes', 'nullable', 'string', 'max:2'],
+            'endereco_cep'       => ['sometimes', 'nullable', 'string', 'max:10'],
         ]);
 
         $configuracao = ConfiguracaoSite::obter();
         $configuracao->update($dados);
+
+        // SEO e sitemap sao cacheados: precisa invalidar
+        ConfiguracaoSite::limparCache();
+        Cache::forget(SitemapController::CACHE_SITEMAP);
+        Cache::forget(SeoController::CACHE_LLMS);
 
         LogService::info('2 - configuracoes atualizadas');
 

@@ -35,11 +35,13 @@ class EventoController extends Controller
         LogService::info('1 - salvando evento');
 
         $dados = $request->validate([
-            'titulo'    => ['required', 'string', 'max:255'],
-            'descricao' => ['required', 'string'],
-            'local'     => ['required', 'string', 'max:255'],
-            'data_hora' => ['required', 'date'],
-            'imagem'    => ['nullable', 'string'],
+            'titulo'            => ['required', 'string', 'max:255'],
+            'descricao'         => ['required', 'string'],
+            'local'             => ['required', 'string', 'max:255'],
+            'data_hora'         => ['required', 'date'],
+            'recorrencia'       => ['nullable', 'string', 'in:nenhuma,semanal,quinzenal,mensal'],
+            'destaque_especial' => ['nullable', 'boolean'],
+            'imagem'            => ['nullable', 'string'],
         ]);
 
         $evento = EventoAgenda::create($dados);
@@ -57,11 +59,13 @@ class EventoController extends Controller
         LogService::info('1 - atualizando evento', ['evento_id' => $evento->id]);
 
         $dados = $request->validate([
-            'titulo'    => ['sometimes', 'string', 'max:255'],
-            'descricao' => ['sometimes', 'string'],
-            'local'     => ['sometimes', 'string', 'max:255'],
-            'data_hora' => ['sometimes', 'date'],
-            'imagem'    => ['sometimes', 'nullable', 'string'],
+            'titulo'            => ['sometimes', 'string', 'max:255'],
+            'descricao'         => ['sometimes', 'string'],
+            'local'             => ['sometimes', 'string', 'max:255'],
+            'data_hora'         => ['sometimes', 'date'],
+            'recorrencia'       => ['sometimes', 'nullable', 'string', 'in:nenhuma,semanal,quinzenal,mensal'],
+            'destaque_especial' => ['sometimes', 'nullable', 'boolean'],
+            'imagem'            => ['sometimes', 'nullable', 'string'],
         ]);
 
         $evento->update($dados);

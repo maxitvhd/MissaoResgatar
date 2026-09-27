@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ConfiguracaoSite;
 use App\Models\TransacaoFinanceira;
 use App\Services\LogService;
+use App\Services\SeoService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -29,6 +30,18 @@ class TransparenciaController extends Controller
         }
 
         $dados = $this->compilarDadosPublicos();
+
+        SeoService::atribuir(SeoService::daPagina()
+            ->titulo('Transparência e Prestação de Contas')
+            ->descricao('Acompanhe a prestação de contas, dízimos, ofertas e gastos da Missão Resgatar de forma aberta e transparente.')
+            ->palavrasChave(['transparência da igreja', 'prestação de contas', 'dízimos'])
+            ->jsonLd(array_filter([
+                '@context' => 'https://schema.org',
+                '@type' => 'WebPage',
+                'name' => 'Transparência e Prestação de Contas',
+                'url' => route('transparencia'),
+                'isPartOf' => ['@id' => rtrim(config('app.url'), '/') . '/#igreja'],
+            ])));
 
         return Inertia::render('Public/Transparencia', [
             'transparencia' => $dados,

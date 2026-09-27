@@ -65,6 +65,9 @@ export interface AgendaEvent {
   description: string;
   location: string;
   dateTime: string;
+  nextDateTime?: string;
+  recurrence?: 'nenhuma' | 'semanal' | 'quinzenal' | 'mensal';
+  isFeatured?: boolean;
   image: string;
 }
 
@@ -227,6 +230,19 @@ export interface SiteSettings {
   pressEmail: string;
   pressMaterialLink: string;
   pressCredLink: string;
+  // SEO
+  seoTitle?: string;
+  seoDescription?: string;
+  seoKeywords?: string;
+  seoOgImage?: string;
+  seoTwitterSite?: string;
+  contactPhone?: string;
+  addressStreet?: string;
+  addressNumber?: string;
+  addressNeighborhood?: string;
+  addressCity?: string;
+  addressState?: string;
+  addressZip?: string;
 }
 
 export interface Member {
