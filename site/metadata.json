@@ -1,0 +1,6 @@
+{
+  "name": "Marcha para Jesus Itaquaquecetuba 2026",
+  "description": "Portal tecnológico e cristão da Marcha para Jesus Itaquaquecetuba 2026. Devocionais, blog, anotações em nuvem e rádio integrada.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
