@@ -31,21 +31,21 @@ class ConfiguracaoController extends Controller
         LogService::info('1 - atualizando configuracoes do site');
 
         $dados = $request->validate([
-            'url_video_fundo'       => ['sometimes', 'nullable', 'string'],
-            'url_imagem_hero'       => ['sometimes', 'nullable', 'string'],
-            'fundo_tamanho'         => ['sometimes', 'nullable', 'string', 'in:cover,contain,fill,scale-down,none'],
-            'fundo_posicao'         => ['sometimes', 'nullable', 'string'],
-            'fundo_opacidade'       => ['sometimes', 'nullable', 'integer', 'min:0', 'max:100'],
-            'fundo_escala'          => ['sometimes', 'nullable', 'integer', 'min:50', 'max:200'],
-            'fundo_escurecimento'   => ['sometimes', 'nullable', 'integer', 'min:0', 'max:100'],
-            'logo_url'              => ['sometimes', 'nullable', 'string'],
+            'url_video_fundo'       => ['sometimes', 'nullable'],
+            'url_imagem_hero'       => ['sometimes', 'nullable'],
+            'fundo_tamanho'         => ['sometimes', 'nullable'],
+            'fundo_posicao'         => ['sometimes', 'nullable'],
+            'fundo_opacidade'       => ['sometimes', 'nullable'],
+            'fundo_escala'          => ['sometimes', 'nullable'],
+            'fundo_escurecimento'   => ['sometimes', 'nullable'],
+            'logo_url'              => ['sometimes', 'nullable'],
             'secoes_ativas'         => ['sometimes', 'nullable', 'array'],
-            'url_instagram'         => ['sometimes', 'nullable', 'string'],
-            'url_facebook'          => ['sometimes', 'nullable', 'string'],
-            'url_youtube'           => ['sometimes', 'nullable', 'string'],
-            'email_imprensa'        => ['sometimes', 'nullable', 'email'],
-            'link_material_imprensa'=> ['sometimes', 'nullable', 'string'],
-            'link_credencial_imprensa' => ['sometimes', 'nullable', 'string'],
+            'url_instagram'         => ['sometimes', 'nullable'],
+            'url_facebook'          => ['sometimes', 'nullable'],
+            'url_youtube'           => ['sometimes', 'nullable'],
+            'email_imprensa'        => ['sometimes', 'nullable'],
+            'link_material_imprensa'=> ['sometimes', 'nullable'],
+            'link_credencial_imprensa' => ['sometimes', 'nullable'],
         ]);
 
         $configuracao = ConfiguracaoSite::obter();
