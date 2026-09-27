@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { 
   ImageIcon, ToggleLeft, Video, Share2, Mail, CheckCircle, 
-  Upload, X, RotateCcw, Sliders, ExternalLink, Save, RefreshCw, Eye
+  Upload, X, RotateCcw, Sliders, ExternalLink, Save, RefreshCw, Eye, MessageCircle, Phone
 } from "lucide-react";
 import { fetchSettings, updateSettings, uploadFile } from "../../lib/api";
 import { SiteSettings } from "../../types";
 
 export default function AdminSettingsTab() {
-  const [activeSubMenu, setActiveSubMenu] = useState<"logo" | "secoes" | "hero" | "redes" | "imprensa">("logo");
+  const [activeSubMenu, setActiveSubMenu] = useState<"logo" | "secoes" | "hero" | "redes" | "whatsapp" | "imprensa">("logo");
   const [loading, setLoading] = useState<boolean>(true);
   const [saving, setSaving] = useState<boolean>(false);
   const [successMsg, setSuccessMsg] = useState<string>("");
@@ -44,6 +44,10 @@ export default function AdminSettingsTab() {
   const [facebookUrl, setFacebookUrl] = useState<string>("");
   const [youtubeUrl, setYoutubeUrl] = useState<string>("");
 
+  const [whatsappLoja, setWhatsappLoja] = useState<string>("");
+  const [whatsappFlutuante, setWhatsappFlutuante] = useState<string>("");
+  const [mensagemWhatsappFlutuante, setMensagemWhatsappFlutuante] = useState<string>("");
+
   const [pressEmail, setPressEmail] = useState<string>("");
   const [pressMaterialLink, setPressMaterialLink] = useState<string>("");
   const [pressCredLink, setPressCredLink] = useState<string>("");
@@ -66,6 +70,9 @@ export default function AdminSettingsTab() {
       setInstagramUrl(data.instagramUrl || "");
       setFacebookUrl(data.facebookUrl || "");
       setYoutubeUrl(data.youtubeUrl || "");
+      setWhatsappLoja(data.whatsappLoja || "");
+      setWhatsappFlutuante(data.whatsappFlutuante || "");
+      setMensagemWhatsappFlutuante(data.mensagemWhatsappFlutuante || "");
       setPressEmail(data.pressEmail || "");
       setPressMaterialLink(data.pressMaterialLink || "");
       setPressCredLink(data.pressCredLink || "");
@@ -102,6 +109,9 @@ export default function AdminSettingsTab() {
         instagramUrl,
         facebookUrl,
         youtubeUrl,
+        whatsappLoja,
+        whatsappFlutuante,
+        mensagemWhatsappFlutuante,
         pressEmail,
         pressMaterialLink,
         pressCredLink,
@@ -184,6 +194,7 @@ export default function AdminSettingsTab() {
     { id: "secoes", label: "Seções do Site", icon: ToggleLeft, desc: "Ativar ou desativar blocos" },
     { id: "hero", label: "Fundo do Hero", icon: Video, desc: "Vídeo/foto e estilo visual" },
     { id: "redes", label: "Redes Sociais", icon: Share2, desc: "Instagram, YouTube e Facebook" },
+    { id: "whatsapp", label: "WhatsApp & Loja", icon: MessageCircle, desc: "Botão flutuante e vendas" },
     { id: "imprensa", label: "Imprensa & Mídia", icon: Mail, desc: "Assessoria e credenciamento" },
   ];
 
@@ -681,6 +692,88 @@ export default function AdminSettingsTab() {
             >
               <Save className="w-4 h-4" />
               <span>{saving ? "Salvando..." : "Salvar Redes Sociais"}</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* SUB-MENU: WHATSAPP & LOJA */}
+      {activeSubMenu === "whatsapp" && (
+        <div className="space-y-6 bg-slate-900/40 border border-slate-800/80 p-6 rounded-3xl">
+          <div className="border-b border-slate-800/80 pb-3">
+            <h4 className="text-sm font-serif font-bold text-slate-100 flex items-center gap-2">
+              <MessageCircle className="w-4 h-4 text-emerald-400" />
+              Configuração de Números do WhatsApp (Loja & Atendimento Flutuante)
+            </h4>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Defina os números para recebimento de pedidos da loja e para o botão flutuante de atendimento do portal.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div className="space-y-2 bg-slate-950/60 p-4 rounded-2xl border border-slate-800">
+              <label className="text-xs font-bold text-amber-400 flex items-center gap-1.5">
+                <Phone className="w-3.5 h-3.5" />
+                <span>WhatsApp da Loja Oficial (Pedidos)</span>
+              </label>
+              <p className="text-[11px] text-slate-400 leading-snug">
+                Número que receberá as mensagens diretas de pedidos e dúvidas sobre os produtos da loja.
+              </p>
+              <input
+                type="text"
+                placeholder="Ex: 5511999999999 ou (11) 99999-9999"
+                value={whatsappLoja}
+                onChange={(e) => setWhatsappLoja(e.target.value)}
+                className="w-full bg-slate-900 border border-slate-750 rounded-xl p-2.5 text-xs text-slate-100 outline-none focus:border-amber-500 font-mono"
+              />
+              <span className="text-[10px] font-mono text-slate-500 block">
+                Formato internacional recomendado: DDD + Número (ex: 5511999999999)
+              </span>
+            </div>
+
+            <div className="space-y-2 bg-slate-950/60 p-4 rounded-2xl border border-slate-800">
+              <label className="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
+                <MessageCircle className="w-3.5 h-3.5" />
+                <span>WhatsApp Flutuante (Atendimento / Pastor)</span>
+              </label>
+              <p className="text-[11px] text-slate-400 leading-snug">
+                Número que abre ao clicar no botão verde flutuante no canto da tela do site.
+              </p>
+              <input
+                type="text"
+                placeholder="Ex: 5511999999999 ou (11) 99999-9999"
+                value={whatsappFlutuante}
+                onChange={(e) => setWhatsappFlutuante(e.target.value)}
+                className="w-full bg-slate-900 border border-slate-750 rounded-xl p-2.5 text-xs text-slate-100 outline-none focus:border-emerald-500 font-mono"
+              />
+              <span className="text-[10px] font-mono text-slate-500 block">
+                Deixe em branco para ocultar o botão flutuante.
+              </span>
+            </div>
+          </div>
+
+          <div className="space-y-2 bg-slate-950/60 p-4 rounded-2xl border border-slate-800">
+            <label className="text-xs font-bold text-slate-200">
+              Mensagem Inicial Padrão do WhatsApp Flutuante
+            </label>
+            <input
+              type="text"
+              placeholder="Ex: Olá! Paz do Senhor, gostaria de falar com a equipe da Missão Resgatar."
+              value={mensagemWhatsappFlutuante}
+              onChange={(e) => setMensagemWhatsappFlutuante(e.target.value)}
+              className="w-full bg-slate-900 border border-slate-750 rounded-xl p-2.5 text-xs text-slate-100 outline-none focus:border-amber-500"
+            />
+          </div>
+
+          <div className="flex justify-end pt-4 border-t border-slate-800/80">
+            <button
+              type="button"
+              onClick={() => handleSave()}
+              disabled={saving}
+              className="py-2.5 px-6 rounded-xl bg-amber-400 hover:bg-amber-500 text-slate-950 font-bold text-xs flex items-center gap-2 cursor-pointer shadow-md transition-all disabled:opacity-50"
+            >
+              <Save className="w-4 h-4" />
+              <span>{saving ? "Salvando..." : "Salvar Números do WhatsApp"}</span>
             </button>
           </div>
         </div>

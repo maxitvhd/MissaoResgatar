@@ -5,7 +5,7 @@ import {
   ShieldCheck, Share2, Check
 } from "lucide-react";
 import { Product } from "../types";
-import { registerStoreOrderClick } from "../lib/api";
+import { registerStoreOrderClick, fetchSettings } from "../lib/api";
 
 interface ProductDetailModalProps {
   product: Product | null;
@@ -73,14 +73,31 @@ export default function ProductDetailModal({ product, onClose }: ProductDetailMo
     setActiveImageIndex((prev) => (prev + 1) % allImages.length);
   };
 
+  const [storePhone, setStorePhone] = useState<string>("");
+
+  useEffect(() => {
+    fetchSettings()
+      .then((data) => {
+        const num = data.whatsappLoja || data.whatsappFlutuante || "";
+        setStorePhone(num);
+      })
+      .catch(() => {});
+  }, []);
+
   const handleWhatsappOrder = () => {
     registerStoreOrderClick({
       produto_id: Number(product.id),
       origem_checkout: "whatsapp",
     });
 
+    let cleanNumber = storePhone.replace(/\D/g, "");
+    if (cleanNumber.length === 10 || cleanNumber.length === 11) {
+      cleanNumber = "55" + cleanNumber;
+    }
+    if (!cleanNumber) cleanNumber = "5511999999999";
+
     const msg = `Olá! Tenho interesse no produto da Loja Oficial Missão Resgatar:%0A%0A*${product.name}*%0AValor: R$ ${finalPrice.toFixed(2).replace(".", ",")}%0ACódigo/ID: #${product.id}%0A%0AGostaria de saber sobre disponibilidade e envio.`;
-    window.open(`https://wa.me/5511999999999?text=${msg}`, "_blank");
+    window.open(`https://wa.me/${cleanNumber}?text=${msg}`, "_blank");
   };
 
   const handleLinkClick = () => {

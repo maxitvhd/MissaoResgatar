@@ -1,6 +1,7 @@
 import React from "react";
 import Navbar from "../Components/Navbar";
 import Footer from "../Components/Footer";
+import FloatingWhatsappButton from "../Components/FloatingWhatsappButton";
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -8,6 +9,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       <Navbar />
       <main className="flex-grow w-full max-w-full overflow-x-hidden">{children}</main>
       <Footer />
+      <FloatingWhatsappButton />
     </div>
   );
 }

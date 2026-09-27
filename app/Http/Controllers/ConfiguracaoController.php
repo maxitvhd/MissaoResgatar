@@ -40,12 +40,15 @@ class ConfiguracaoController extends Controller
             'fundo_escurecimento'   => ['sometimes', 'nullable'],
             'logo_url'              => ['sometimes', 'nullable'],
             'secoes_ativas'         => ['sometimes', 'nullable', 'array'],
-            'url_instagram'         => ['sometimes', 'nullable'],
-            'url_facebook'          => ['sometimes', 'nullable'],
-            'url_youtube'           => ['sometimes', 'nullable'],
-            'email_imprensa'        => ['sometimes', 'nullable'],
-            'link_material_imprensa'=> ['sometimes', 'nullable'],
-            'link_credencial_imprensa' => ['sometimes', 'nullable'],
+            'url_instagram'               => ['sometimes', 'nullable'],
+            'url_facebook'                => ['sometimes', 'nullable'],
+            'url_youtube'                 => ['sometimes', 'nullable'],
+            'whatsapp_loja'               => ['sometimes', 'nullable'],
+            'whatsapp_flutuante'          => ['sometimes', 'nullable'],
+            'mensagem_whatsapp_flutuante' => ['sometimes', 'nullable'],
+            'email_imprensa'              => ['sometimes', 'nullable'],
+            'link_material_imprensa'      => ['sometimes', 'nullable'],
+            'link_credencial_imprensa'    => ['sometimes', 'nullable'],
         ]);
 
         $configuracao = ConfiguracaoSite::obter();

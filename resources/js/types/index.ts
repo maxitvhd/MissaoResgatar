@@ -221,6 +221,9 @@ export interface SiteSettings {
   instagramUrl: string;
   facebookUrl: string;
   youtubeUrl: string;
+  whatsappLoja?: string;
+  whatsappFlutuante?: string;
+  mensagemWhatsappFlutuante?: string;
   pressEmail: string;
   pressMaterialLink: string;
   pressCredLink: string;

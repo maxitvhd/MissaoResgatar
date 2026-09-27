@@ -22,12 +22,15 @@ class ConfiguracaoSiteResource extends JsonResource
             'backgroundDarkness'   => (int) ($this->fundo_escurecimento ?? 70),
             'logoUrl'              => $this->logo_url,
             'activeSections'       => $this->secoes_ativas,
-            'instagramUrl'         => $this->url_instagram,
-            'facebookUrl'          => $this->url_facebook,
-            'youtubeUrl'           => $this->url_youtube,
-            'pressEmail'           => $this->email_imprensa,
-            'pressMaterialLink'    => $this->link_material_imprensa,
-            'pressCredLink'        => $this->link_credencial_imprensa,
+            'instagramUrl'               => $this->url_instagram,
+            'facebookUrl'                => $this->url_facebook,
+            'youtubeUrl'                 => $this->url_youtube,
+            'whatsappLoja'               => $this->whatsapp_loja,
+            'whatsappFlutuante'          => $this->whatsapp_flutuante,
+            'mensagemWhatsappFlutuante'  => $this->mensagem_whatsapp_flutuante,
+            'pressEmail'                 => $this->email_imprensa,
+            'pressMaterialLink'          => $this->link_material_imprensa,
+            'pressCredLink'              => $this->link_credencial_imprensa,
         ];
     }
 }
