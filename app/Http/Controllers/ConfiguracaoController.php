@@ -57,6 +57,8 @@ class ConfiguracaoController extends Controller
             'palavras_chave'     => ['sometimes', 'nullable', 'string', 'max:500'],
             'imagem_og'          => ['sometimes', 'nullable', 'string', 'max:255'],
             'twitter_site'       => ['sometimes', 'nullable', 'string', 'max:255'],
+            'noticias_api_url'   => ['sometimes', 'nullable', 'string', 'max:255'],
+            'noticias_api_key'   => ['sometimes', 'nullable', 'string', 'max:255'],
             'telefone'           => ['sometimes', 'nullable', 'string', 'max:50'],
             'endereco_rua'       => ['sometimes', 'nullable', 'string', 'max:255'],
             'endereco_numero'    => ['sometimes', 'nullable', 'string', 'max:20'],
@@ -71,11 +73,24 @@ class ConfiguracaoController extends Controller
 
         // SEO e sitemap sao cacheados: precisa invalidar
         ConfiguracaoSite::limparCache();
+        Cache::forget('noticias_api_categorias');
         Cache::forget(SitemapController::CACHE_SITEMAP);
         Cache::forget(SeoController::CACHE_LLMS);
 
         LogService::info('2 - configuracoes atualizadas');
 
         return new ConfiguracaoSiteResource($configuracao->fresh());
+    }
+
+    /**
+     * Testa conexao com a API de Noticias (admin).
+     */
+    public function testarNoticiasApi(Request $request, \App\Services\NoticiasApiService $service)
+    {
+        $url = $request->input('url');
+        $key = $request->input('key');
+
+        $resultado = $service->testarConexao($url, $key);
+        return response()->json($resultado);
     }
 }

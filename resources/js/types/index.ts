@@ -236,6 +236,8 @@ export interface SiteSettings {
   seoKeywords?: string;
   seoOgImage?: string;
   seoTwitterSite?: string;
+  noticiasApiUrl?: string;
+  noticiasApiKey?: string;
   contactPhone?: string;
   addressStreet?: string;
   addressNumber?: string;

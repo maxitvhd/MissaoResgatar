@@ -205,6 +205,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::put('/financeiro/pedidos-loja/{pedido}', [FinanceiroController::class, 'atualizarStatusPedido']);
 
     Route::put('/configuracoes', [ConfiguracaoController::class, 'atualizar']);
+    Route::post('/configuracoes/testar-noticias-api', [ConfiguracaoController::class, 'testarNoticiasApi']);
 
     Route::post('/upload', [UploadController::class, 'enviar']);
     Route::post('/upload/lote', [UploadController::class, 'enviarLote']);

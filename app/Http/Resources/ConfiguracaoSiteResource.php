@@ -38,6 +38,8 @@ class ConfiguracaoSiteResource extends JsonResource
             'seoKeywords'        => $this->palavras_chave,
             'seoOgImage'         => $this->imagem_og,
             'seoTwitterSite'     => $this->twitter_site,
+            'noticiasApiUrl'     => $this->noticias_api_url,
+            'noticiasApiKey'     => $this->noticias_api_key,
             'contactPhone'       => $this->telefone,
             'addressStreet'      => $this->endereco_rua,
             'addressNumber'      => $this->endereco_numero,

@@ -4,13 +4,19 @@ import { fetchNews, likeNews, addNewsComment } from "../lib/api";
 import { NewsPost, Comment } from "../types";
 import { useTranslation } from "react-i18next";
 
-export default function NewsSection() {
+interface NewsSectionProps {
+  initialPosts?: NewsPost[];
+  meta?: { total: number; pagina: number; ultima_pagina: number };
+  initialCategories?: any[];
+}
+
+export default function NewsSection({ initialPosts, meta, initialCategories }: NewsSectionProps) {
   const { t } = useTranslation();
-  const [posts, setPosts] = useState<NewsPost[]>([]);
+  const [posts, setPosts] = useState<NewsPost[]>(initialPosts && initialPosts.length > 0 ? initialPosts : []);
   const [selectedPost, setSelectedPost] = useState<NewsPost | null>(null);
   const [commentAuthor, setCommentAuthor] = useState<string>("");
   const [commentContent, setCommentContent] = useState<string>("");
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(!initialPosts || initialPosts.length === 0);
   const [submittingComment, setSubmittingComment] = useState<boolean>(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
@@ -18,9 +24,22 @@ export default function NewsSection() {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedCategory, setSelectedCategory] = useState<string>("Todos");
 
-  const categories = ["Todos", "Missão Resgatar", "Novidades", "Ação Social", "Estudos"];
+  const categories = React.useMemo(() => {
+    if (initialCategories && Array.isArray(initialCategories) && initialCategories.length > 0) {
+      const names = initialCategories.map(c => typeof c === 'string' ? c : (c.nome || c.name));
+      return ["Todos", ...names];
+    }
+    const catSet = new Set<string>();
+    posts.forEach(p => { if (p.category) catSet.add(p.category); });
+    return ["Todos", ...Array.from(catSet)];
+  }, [initialCategories, posts]);
 
   const loadPosts = async () => {
+    if (initialPosts && initialPosts.length > 0) {
+      setPosts(initialPosts);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     const data = await fetchNews();
     setPosts(data);
@@ -29,7 +48,7 @@ export default function NewsSection() {
 
   useEffect(() => {
     loadPosts();
-  }, []);
+  }, [initialPosts]);
 
   const handleLike = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -294,10 +313,15 @@ export default function NewsSection() {
                         className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
                         referrerPolicy="no-referrer"
                       />
-                      <div className="absolute top-3 left-3">
+                      <div className="absolute top-3 left-3 flex items-center gap-1.5 flex-wrap">
                         <span className="px-2 py-0.5 rounded bg-amber-400 text-slate-950 text-[9px] font-mono font-bold uppercase tracking-wide">
                           {post.category}
                         </span>
+                        {post.aiVerified && (
+                          <span className="px-2 py-0.5 rounded bg-blue-500/20 backdrop-blur-md border border-blue-400/30 text-blue-300 text-[9px] font-mono font-semibold flex items-center gap-1">
+                            <Sparkles className="w-2.5 h-2.5 text-blue-400" /> IA Verificada
+                          </span>
+                        )}
                       </div>
                     </div>
 

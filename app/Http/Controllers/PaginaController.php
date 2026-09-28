@@ -19,6 +19,7 @@ use App\Http\Resources\NoticiaResource;
 use App\Http\Resources\PatrocinadorResource;
 use App\Http\Resources\RegulamentoResource;
 use App\Services\LogService;
+use App\Services\NoticiasApiService;
 use App\Services\SeoService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -35,7 +36,7 @@ class PaginaController extends Controller
     /**
      * Home - feed com noticias, devocionais, eventos, atracoes e configs.
      */
-    public function home()
+    public function home(NoticiasApiService $noticiasApi)
     {
         LogService::info('1 - renderizando pagina home');
 
@@ -43,8 +44,13 @@ class PaginaController extends Controller
         SeoService::atribuir(SeoService::daPagina()
             ->jsonLd($this->jsonLdWebSite()));
 
+        $apiDados = $noticiasApi->obterNoticias(pagina: 1, limite: 6);
+        $noticias = !empty($apiDados['noticias']) 
+            ? $apiDados['noticias'] 
+            : NoticiaResource::collection(Noticia::with('comentarios')->orderByDesc('created_at')->get());
+
         return Inertia::render('Home', [
-            'noticias'   => NoticiaResource::collection(Noticia::with('comentarios')->orderByDesc('created_at')->get()),
+            'noticias'   => $noticias,
             'devocionais'=> DevocionalResource::collection(Devocional::orderByDesc('created_at')->get()),
             'eventos'    => EventoAgendaResource::collection(EventoAgenda::orderBy('data_hora')->get()),
             'atracoes'   => AtracaoResource::collection(Atracao::orderBy('horario')->get()),
@@ -55,58 +61,82 @@ class PaginaController extends Controller
     }
 
     /**
-     * Secao de noticias e blog.
+     * Secao de noticias alimentadas via API da IA (maximo.tec.br).
      */
-    public function noticias()
+    public function noticias(Request $request, NoticiasApiService $noticiasApi)
     {
         LogService::info('1 - renderizando pagina de noticias');
 
+        $pagina = $request->integer('pagina', 1);
+        $categoria = $request->input('categoria');
+        $busca = $request->input('busca');
+
+        $apiDados = $noticiasApi->obterNoticias(pagina: $pagina, categoria: $categoria, busca: $busca, limite: 12);
+        
+        $noticias = !empty($apiDados['noticias'])
+            ? $apiDados['noticias']
+            : NoticiaResource::collection(Noticia::with('comentarios')->orderByDesc('created_at')->get());
+
         SeoService::atribuir(SeoService::daPagina()
-            ->titulo('Notícias e Blog')
-            ->descricao('Comunicados, arte e artigos da Missão Resgatar. Fique por dentro do que acontece na igreja.')
-            ->palavrasChave(['notícias da igreja', 'blog cristão', 'comunicados']));
+            ->titulo('Notícias & Atualidades')
+            ->descricao('Notícias e atualidades em tempo real alimentadas por Inteligência Artificial (maximo.tec.br).')
+            ->palavrasChave(['notícias', 'atualidades', 'mundo cristão', 'noticias ia']));
 
         return Inertia::render('Public/Noticias', [
-            'noticias' => NoticiaResource::collection(Noticia::with('comentarios')->orderByDesc('created_at')->get()),
+            'noticias' => $noticias,
+            'meta' => [
+                'total' => $apiDados['total'] ?? count($noticias),
+                'pagina' => $apiDados['pagina'] ?? 1,
+                'ultima_pagina' => $apiDados['ultima_pagina'] ?? 1,
+            ],
+            'categorias' => $noticiasApi->obterCategorias(),
         ]);
     }
 
     /**
-     * Detalhe de uma noticia (URL propria, indexavel).
+     * Detalhe de uma noticia (indexavel - via API da IA ou banco local).
      */
-    public function noticiaDetalhe(Noticia $noticia)
+    public function noticiaDetalhe(string $slugOrId, NoticiasApiService $noticiasApi)
     {
-        LogService::info('1 - renderizando noticia', ['id' => $noticia->id]);
+        LogService::info('1 - renderizando noticia', ['slug_ou_id' => $slugOrId]);
 
-        $noticia->load('comentarios');
+        $itemNoticia = $noticiasApi->obterNoticia($slugOrId);
+
+        if (!$itemNoticia) {
+            // Fallback para o banco local
+            $local = Noticia::where('id', $slugOrId)->first();
+            if ($local) {
+                $local->load('comentarios');
+                $itemNoticia = (new NoticiaResource($local))->resolve();
+            }
+        }
+
+        if (!$itemNoticia) {
+            abort(404, 'Notícia não encontrada');
+        }
 
         SeoService::atribuir(SeoService::daPagina()
-            ->titulo($noticia->titulo)
-            ->descricao($noticia->conteudo)
-            ->imagem($noticia->imagem)
+            ->titulo($itemNoticia['title'] ?? $itemNoticia['titulo'] ?? 'Notícia')
+            ->descricao($itemNoticia['summary'] ?? $itemNoticia['content'] ?? '')
+            ->imagem($itemNoticia['image'] ?? null)
             ->tipo('article')
-            ->palavrasChave([$noticia->categoria])
+            ->palavrasChave([$itemNoticia['category'] ?? 'Geral'])
             ->jsonLd(array_filter([
                 '@context' => 'https://schema.org',
                 '@type' => 'NewsArticle',
-                'headline' => $noticia->titulo,
-                'description' => SeoService::daPagina()->resumir($noticia->conteudo, 200),
-                'image' => $noticia->imagem,
-                'datePublished' => $noticia->created_at?->toAtomString(),
-                'dateModified' => $noticia->updated_at?->toAtomString(),
-                'author' => $noticia->autor ? [
-                    '@type' => 'Person',
-                    'name' => $noticia->autor,
-                ] : null,
-                'articleSection' => $noticia->categoria,
-                'publisher' => [
-                    '@id' => rtrim(config('app.url'), '/') . '/#igreja',
+                'headline' => $itemNoticia['title'] ?? '',
+                'description' => SeoService::daPagina()->resumir($itemNoticia['summary'] ?? $itemNoticia['content'] ?? '', 200),
+                'image' => $itemNoticia['image'] ?? null,
+                'datePublished' => $itemNoticia['date'] ?? null,
+                'author' => [
+                    '@type' => 'Organization',
+                    'name' => $itemNoticia['author'] ?? 'IA Notícias',
                 ],
-                'mainEntityOfPage' => route('noticias.detalhe', $noticia->id),
+                'articleSection' => $itemNoticia['category'] ?? 'Geral',
             ])));
 
         return Inertia::render('Public/NoticiaDetalhe', [
-            'noticia' => new NoticiaResource($noticia),
+            'noticia' => $itemNoticia,
         ]);
     }
 

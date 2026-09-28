@@ -8,10 +8,16 @@ import { fetchSettings, updateSettings, uploadFile } from "../../lib/api";
 import { SiteSettings } from "../../types";
 
 export default function AdminSettingsTab() {
-  const [activeSubMenu, setActiveSubMenu] = useState<"logo" | "secoes" | "hero" | "redes" | "whatsapp" | "imprensa" | "seo">("logo");
+  const [activeSubMenu, setActiveSubMenu] = useState<"logo" | "secoes" | "hero" | "redes" | "whatsapp" | "imprensa" | "seo" | "noticias_api">("logo");
   const [loading, setLoading] = useState<boolean>(true);
   const [saving, setSaving] = useState<boolean>(false);
   const [successMsg, setSuccessMsg] = useState<string>("");
+
+  // Noticias API (IA maximo.tec.br) State
+  const [noticiasApiUrl, setNoticiasApiUrl] = useState<string>("https://noticias.maximo.tec.br/api/noticias/v1");
+  const [noticiasApiKey, setNoticiasApiKey] = useState<string>("");
+  const [testingApi, setTestingApi] = useState<boolean>(false);
+  const [apiTestResult, setApiTestResult] = useState<{ sucesso: boolean; mensagem: string } | null>(null);
 
   // Settings State
   const [logoUrl, setLogoUrl] = useState<string>("");
@@ -96,6 +102,8 @@ export default function AdminSettingsTab() {
       setSeoKeywords(data.seoKeywords || "");
       setSeoOgImage(data.seoOgImage || "");
       setSeoTwitterSite(data.seoTwitterSite || "");
+      setNoticiasApiUrl(data.noticiasApiUrl || "https://noticias.maximo.tec.br/api/noticias/v1");
+      setNoticiasApiKey(data.noticiasApiKey || "");
       setContactPhone(data.contactPhone || "");
       setAddressStreet(data.addressStreet || "");
       setAddressNumber(data.addressNumber || "");
@@ -117,6 +125,24 @@ export default function AdminSettingsTab() {
   const triggerSuccess = (msg: string) => {
     setSuccessMsg(msg);
     setTimeout(() => setSuccessMsg(""), 4000);
+  };
+
+  const handleTestApiConnection = async () => {
+    setTestingApi(true);
+    setApiTestResult(null);
+    try {
+      const res = await fetch("/configuracoes/testar-noticias-api", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Accept": "application/json" },
+        body: JSON.stringify({ url: noticiasApiUrl, key: noticiasApiKey }),
+      });
+      const json = await res.json();
+      setApiTestResult(json);
+    } catch (err: any) {
+      setApiTestResult({ sucesso: false, mensagem: "Erro ao testar API: " + (err.message || "Falha na requisição") });
+    } finally {
+      setTestingApi(false);
+    }
   };
 
   const handleSave = async (e?: React.FormEvent) => {
@@ -147,6 +173,8 @@ export default function AdminSettingsTab() {
         seoKeywords,
         seoOgImage,
         seoTwitterSite,
+        noticias_api_url: noticiasApiUrl,
+        noticias_api_key: noticiasApiKey,
         contactPhone,
         addressStreet,
         addressNumber,
@@ -236,6 +264,7 @@ export default function AdminSettingsTab() {
     { id: "whatsapp", label: "WhatsApp & Loja", icon: MessageCircle, desc: "Botão flutuante e vendas" },
     { id: "imprensa", label: "Imprensa & Mídia", icon: Mail, desc: "Assessoria e credenciamento" },
     { id: "seo", label: "SEO & Busca", icon: Search, desc: "Google, redes sociais e IAs" },
+    { id: "noticias_api", label: "API de Notícias IA", icon: Globe, desc: "Integração maximo.tec.br" },
   ];
 
   return (
@@ -1103,6 +1132,93 @@ export default function AdminSettingsTab() {
             >
               <Save className="w-4 h-4" />
               <span>{saving ? "Salvando..." : "Salvar Configurações de SEO"}</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* SUB-MENU 8: API DE NOTÍCIAS IA */}
+      {activeSubMenu === "noticias_api" && (
+        <div className="space-y-6 bg-slate-900/40 border border-slate-800/80 p-6 rounded-3xl">
+          <div className="border-b border-slate-800/80 pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h4 className="text-sm font-serif font-bold text-slate-100 flex items-center gap-2">
+                <Globe className="w-4 h-4 text-amber-500" />
+                Integração com o Sistema de Notícias IA (maximo.tec.br)
+              </h4>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Alimente a seção de Notícias do site automaticamente consumindo as matérias jornalísticas geradas com Inteligência Artificial.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleTestApiConnection}
+              disabled={testingApi}
+              className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-750 border border-slate-700 text-amber-400 font-mono text-xs flex items-center gap-2 transition-all cursor-pointer shrink-0"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${testingApi ? "animate-spin" : ""}`} />
+              <span>{testingApi ? "Testando Conexão..." : "Testar Conexão com API"}</span>
+            </button>
+          </div>
+
+          {apiTestResult && (
+            <div className={`p-4 rounded-2xl border text-xs font-mono flex items-start gap-3 ${
+              apiTestResult.sucesso 
+                ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
+                : "bg-rose-500/10 border-rose-500/30 text-rose-300"
+            }`}>
+              <CheckCircle className="w-4 h-4 shrink-0 mt-0.5" />
+              <div>
+                <span className="font-bold block mb-0.5">{apiTestResult.sucesso ? "Conexão Bem-Sucedida!" : "Falha no Teste de Conexão"}</span>
+                <p className="text-[11px] opacity-90">{apiTestResult.mensagem}</p>
+              </div>
+            </div>
+          )}
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-[10px] font-mono text-slate-400 uppercase block font-semibold">
+                URL do Servidor / Endpoint da API *
+              </label>
+              <input
+                type="text"
+                placeholder="https://noticias.maximo.tec.br/api/noticias/v1"
+                value={noticiasApiUrl}
+                onChange={(e) => setNoticiasApiUrl(e.target.value)}
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 outline-none focus:border-amber-500 font-mono"
+              />
+              <p className="text-[11px] text-slate-500">
+                Endereço padrão: <code className="text-amber-400">https://noticias.maximo.tec.br/api/noticias/v1</code>
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[10px] font-mono text-slate-400 uppercase block font-semibold">
+                Chave de Autenticação de API (X-API-KEY) *
+              </label>
+              <input
+                type="text"
+                placeholder="Insira a sua chave gerada no painel de Notícias IA..."
+                value={noticiasApiKey}
+                onChange={(e) => setNoticiasApiKey(e.target.value)}
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 outline-none focus:border-amber-500 font-mono"
+              />
+              <p className="text-[11px] text-slate-500">
+                A chave pode ser cadastrada aqui pelo painel ou definida no arquivo <code className="text-amber-400">.env</code> como <code className="text-amber-400">NOTICIAS_API_KEY</code>. A chave do painel tem prioridade.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex justify-end pt-4 border-t border-slate-800/80">
+            <button
+              type="button"
+              onClick={() => handleSave()}
+              disabled={saving}
+              className="py-2.5 px-6 rounded-xl bg-amber-400 hover:bg-amber-500 text-slate-950 font-bold text-xs flex items-center gap-2 cursor-pointer shadow-md transition-all disabled:opacity-50"
+            >
+              <Save className="w-4 h-4" />
+              <span>{saving ? "Salvando..." : "Salvar Credenciais da API"}</span>
             </button>
           </div>
         </div>

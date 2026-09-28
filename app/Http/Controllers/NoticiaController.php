@@ -16,28 +16,49 @@ class NoticiaController extends Controller
 {
 
     /**
-     * Lista todas as noticias (publico).
+     * Lista todas as noticias (publico via API).
      */
-    public function index()
+    public function index(Request $request, \App\Services\NoticiasApiService $noticiasApi)
     {
         LogService::info('1 - listando noticias publicas');
+
+        $pagina = $request->integer('pagina', 1);
+        $categoria = $request->input('categoria');
+        $busca = $request->input('busca');
+
+        $dados = $noticiasApi->obterNoticias(pagina: $pagina, categoria: $categoria, busca: $busca);
+
+        if (!empty($dados['noticias'])) {
+            return response()->json([
+                'data' => $dados['noticias'],
+                'meta' => [
+                    'total' => $dados['total'],
+                    'pagina' => $dados['pagina'],
+                    'ultima_pagina' => $dados['ultima_pagina'],
+                ]
+            ]);
+        }
 
         $noticias = Noticia::with('comentarios')
             ->orderByDesc('created_at')
             ->get();
 
         return NoticiaResource::collection($noticias);
-
-        LogService::info('2 - noticias carregadas', ['total' => $noticias->count()]);
     }
 
     /**
-     * Exibe uma noticia especifica e incrementa visualizacoes.
+     * Exibe uma noticia especifica pelo slug ou ID.
      */
-    public function mostrar(Noticia $noticia)
+    public function mostrar(string $slugOrId, \App\Services\NoticiasApiService $noticiasApi)
     {
-        LogService::info('1 - exibindo noticia', ['noticia_id' => $noticia->id]);
+        LogService::info('1 - exibindo noticia', ['slug_ou_id' => $slugOrId]);
 
+        $item = $noticiasApi->obterNoticia($slugOrId);
+        if ($item) {
+            return response()->json(['data' => $item]);
+        }
+
+        $noticia = Noticia::where('id', $slugOrId)->firstOrFail();
         $noticia->increment('visualizacoes');
         $noticia->load('comentarios');
 

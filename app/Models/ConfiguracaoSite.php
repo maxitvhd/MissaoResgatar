@@ -43,6 +43,8 @@ class ConfiguracaoSite extends Model
         'palavras_chave',
         'imagem_og',
         'twitter_site',
+        'noticias_api_url',
+        'noticias_api_key',
         'telefone',
         'endereco_rua',
         'endereco_numero',
