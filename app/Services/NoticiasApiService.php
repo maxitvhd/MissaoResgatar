@@ -169,10 +169,18 @@ class NoticiasApiService
     {
         $credenciais = $this->getCredenciais();
         $targetUrl = !empty($url) ? rtrim($url, '/') : $credenciais['url'];
-        $targetKey = $key ?? $credenciais['key'];
+        $targetKey = trim($key ?? $credenciais['key']);
+
+        if (empty($targetKey)) {
+            return [
+                'sucesso' => false,
+                'mensagem' => 'A Chave de API está vazia. Por favor, insira a sua Chave de API antes de testar a conexão.',
+            ];
+        }
 
         try {
-            $response = Http::timeout(6)
+            // Tenta o endpoint /status
+            $response = Http::timeout(8)
                 ->withHeaders([
                     'Accept' => 'application/json',
                     'X-API-KEY' => $targetKey,
@@ -185,15 +193,38 @@ class NoticiasApiService
                 $data = $response->json();
                 return [
                     'sucesso' => true,
-                    'mensagem' => $data['mensagem'] ?? 'Conexão estabelecida com sucesso com a API de Notícias!',
+                    'mensagem' => $data['mensagem'] ?? $data['message'] ?? 'Conexão estabelecida com sucesso com a API de Notícias!',
                     'dados' => $data,
                 ];
             }
 
-            $json = $response->json();
+            // Tenta fallback com /noticias?limite=1
+            $responseFeed = Http::timeout(8)
+                ->withHeaders([
+                    'Accept' => 'application/json',
+                    'X-API-KEY' => $targetKey,
+                ])
+                ->get($targetUrl . '/noticias', [
+                    'limite' => 1,
+                    'chave' => $targetKey
+                ]);
+
+            if ($responseFeed->successful()) {
+                $data = $responseFeed->json();
+                $total = $data['total'] ?? count($data['noticias'] ?? []);
+                return [
+                    'sucesso' => true,
+                    'mensagem' => "Conexão com a API confirmada! {$total} notícias encontradas na base remota.",
+                    'dados' => $data,
+                ];
+            }
+
+            $json = $responseFeed->json() ?? $response->json();
+            $msg = $json['message'] ?? $json['mensagem'] ?? ('Falha na autenticação (Status HTTP ' . $responseFeed->status() . '). Verifique sua Chave de API.');
+
             return [
                 'sucesso' => false,
-                'mensagem' => $json['message'] ?? $json['mensagem'] ?? 'Falha ao autenticar na API (Status ' . $response->status() . '). Verifique sua Chave de API.',
+                'mensagem' => $msg,
             ];
         } catch (\Exception $e) {
             return [

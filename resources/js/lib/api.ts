@@ -587,6 +587,8 @@ export async function updateSettings(settings: Partial<SiteSettings>): Promise<S
       palavras_chave: settings.seoKeywords,
       imagem_og: settings.seoOgImage,
       twitter_site: settings.seoTwitterSite,
+      noticias_api_url: settings.noticiasApiUrl,
+      noticias_api_key: settings.noticiasApiKey,
       telefone: settings.contactPhone,
       endereco_rua: settings.addressStreet,
       endereco_numero: settings.addressNumber,

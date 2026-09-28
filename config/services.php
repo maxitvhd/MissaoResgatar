@@ -37,7 +37,7 @@ return [
 
     'noticias_api' => [
         'url' => env('NOTICIAS_API_URL', 'https://noticias.maximo.tec.br/api/noticias/v1'),
-        'key' => env('NOTICIAS_API_KEY', ''),
+        'key' => env('NOTICIAS_API_KEY', 'ntc_iNDWfzH8jmxLn7vdWbmDIHw0thoV77GULX8AGdd5'),
     ],
 
 ];
