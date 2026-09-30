@@ -243,7 +243,7 @@ export default function NewsSection({ initialPosts, meta: initialMeta, initialCa
                     <div className="p-5 flex-1 flex flex-col justify-between">
                       <div>
                         <div className="flex items-center space-x-3 text-[10px] font-mono text-slate-500 mb-2">
-                          <span className="flex items-center"><User className="w-3 h-3 mr-0.5" /> Rede Máximo (maximo.tec.br)</span>
+                          <span className="flex items-center"><User className="w-3 h-3 mr-0.5" /> Missão Resgatar</span>
                           <span>•</span>
                           <span>{post.date}</span>
                         </div>

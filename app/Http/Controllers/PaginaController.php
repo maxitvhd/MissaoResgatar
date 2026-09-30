@@ -79,8 +79,8 @@ class PaginaController extends Controller
 
         SeoService::atribuir(SeoService::daPagina()
             ->titulo('Notícias & Atualidades')
-            ->descricao('Notícias e atualidades em tempo real alimentadas por Inteligência Artificial (maximo.tec.br).')
-            ->palavrasChave(['notícias', 'atualidades', 'mundo cristão', 'noticias ia']));
+            ->descricao('Acompanhe as notícias e atualidades do reino, igreja e mundo cristão atualizadas diariamente.')
+            ->palavrasChave(['notícias', 'atualidades', 'mundo cristão', 'igreja', 'fé']));
 
         return Inertia::render('Public/Noticias', [
             'noticias' => $noticias,
