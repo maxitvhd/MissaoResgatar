@@ -48,26 +48,26 @@ export default function NoticiaDetalhe({ noticia }: NoticiaDetalheProps) {
             {item.title}
           </h1>
 
-          <div className="flex items-center gap-4 text-xs text-slate-500 mb-6">
+          <div className="flex items-center gap-4 text-xs text-slate-400 mb-6 font-mono flex-wrap">
             {item.date && (
-              <span className="flex items-center gap-1.5">
+              <span className="flex items-center gap-1.5 text-amber-400">
                 <Calendar className="w-3.5 h-3.5" />
-                {new Date(item.date).toLocaleDateString("pt-BR", {
-                  day: "2-digit",
-                  month: "long",
-                  year: "numeric",
-                })}
+                {typeof item.date === 'string' && item.date.includes('/') 
+                  ? item.date 
+                  : (!isNaN(new Date(item.date).getTime()) 
+                      ? new Date(item.date).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })
+                      : item.date)}
               </span>
             )}
             {item.author && (
               <span className="flex items-center gap-1.5">
-                <User className="w-3.5 h-3.5" />
+                <User className="w-3.5 h-3.5 text-slate-400" />
                 {item.author}
               </span>
             )}
             <button
               onClick={compartilhar}
-              className="flex items-center gap-1.5 hover:text-amber-400 transition-colors"
+              className="flex items-center gap-1.5 hover:text-amber-400 transition-colors cursor-pointer"
             >
               <Share2 className="w-3.5 h-3.5" /> Compartilhar
             </button>
@@ -77,12 +77,12 @@ export default function NoticiaDetalhe({ noticia }: NoticiaDetalheProps) {
             <img
               src={item.image}
               alt={item.title}
-              className="w-full rounded-2xl border border-slate-800 mb-8 max-h-96 object-cover"
+              className="w-full rounded-2xl border border-slate-800 mb-8 max-h-[450px] object-cover shadow-xl"
             />
           )}
 
           <div
-            className="text-slate-300 text-sm sm:text-base leading-relaxed space-y-4 [&_a]:text-amber-500 [&_a]:underline [&_strong]:text-slate-100 [&_h2]:text-xl [&_h2]:font-bold [&_h2]:text-slate-100 [&_h3]:text-lg [&_h3]:font-bold [&_h3]:text-slate-100 [&_ul]:list-disc [&_ul]:pl-5"
+            className="text-slate-300 text-sm sm:text-base leading-relaxed space-y-4 [&_a]:text-amber-400 [&_a]:underline [&_strong]:text-slate-100 [&_h2]:text-xl sm:[&_h2]:text-2xl [&_h2]:font-serif [&_h2]:font-bold [&_h2]:text-slate-100 [&_h2]:mt-6 [&_h2]:mb-3 [&_h3]:text-lg sm:[&_h3]:text-xl [&_h3]:font-serif [&_h3]:font-bold [&_h3]:text-amber-400 [&_h3]:mt-6 [&_h3]:mb-2 [&_p]:text-slate-300 [&_p]:leading-relaxed [&_p]:mb-4 [&_ul]:list-disc [&_ul]:pl-5 [&_blockquote]:border-l-4 [&_blockquote]:border-amber-500 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-slate-400 [&_.card]:bg-slate-900/60 [&_.card]:border [&_.card]:border-slate-800 [&_.card]:p-4 [&_.card]:rounded-2xl [&_.card]:my-6 [&_.badge]:inline-block [&_.badge]:px-2 [&_.badge]:py-1 [&_.badge]:rounded [&_.badge]:text-xs [&_.badge]:font-mono"
             dangerouslySetInnerHTML={{ __html: limparConteudo(item.content) }}
           />
 

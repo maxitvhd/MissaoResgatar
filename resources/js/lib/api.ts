@@ -37,14 +37,59 @@ async function unwrap<T>(res: Response): Promise<T> {
   return data as T;
 }
 
-export async function fetchNews(): Promise<NewsPost[]> {
+export async function fetchNews(params?: { page?: number; search?: string; category?: string }): Promise<NewsPost[]> {
   try {
-    const res = await jsonRequest("/api/noticias");
+    const query = new URLSearchParams();
+    if (params?.page) query.append("pagina", String(params.page));
+    if (params?.search) query.append("busca", params.search);
+    if (params?.category && params.category !== "Todos") query.append("categoria", params.category);
+
+    const queryString = query.toString() ? `?${query.toString()}` : "";
+    const res = await jsonRequest(`/api/noticias${queryString}`);
     if (!res.ok) throw new Error("Failed to fetch news");
-    return await unwrap(res);
+    const json = await res.json();
+    return (json.data || (Array.isArray(json) ? json : [])) as NewsPost[];
   } catch (error) {
     console.error(error);
     return [];
+  }
+}
+
+export async function fetchNewsWithPagination(params?: { page?: number; search?: string; category?: string }): Promise<{ posts: NewsPost[]; meta: { total: number; pagina: number; ultima_pagina: number } }> {
+  try {
+    const query = new URLSearchParams();
+    if (params?.page) query.append("pagina", String(params.page));
+    if (params?.search) query.append("busca", params.search);
+    if (params?.category && params.category !== "Todos") query.append("categoria", params.category);
+
+    const queryString = query.toString() ? `?${query.toString()}` : "";
+    const res = await jsonRequest(`/api/noticias${queryString}`);
+    if (!res.ok) throw new Error("Failed to fetch news");
+    const json = await res.json();
+    
+    const posts = (json.data || (Array.isArray(json) ? json : [])) as NewsPost[];
+    const meta = json.meta || {
+      total: posts.length,
+      pagina: params?.page || 1,
+      ultima_pagina: 1,
+    };
+
+    return { posts, meta };
+  } catch (error) {
+    console.error(error);
+    return { posts: [], meta: { total: 0, pagina: 1, ultima_pagina: 1 } };
+  }
+}
+
+export async function fetchNewsDetail(slugOrId: string): Promise<NewsPost | null> {
+  try {
+    const res = await jsonRequest(`/api/noticias/${encodeURIComponent(slugOrId)}`);
+    if (!res.ok) throw new Error("Failed to fetch news detail");
+    const json = await res.json();
+    return (json.data || json) as NewsPost;
+  } catch (error) {
+    console.error(error);
+    return null;
   }
 }
 
