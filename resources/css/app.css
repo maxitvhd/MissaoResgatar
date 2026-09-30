@@ -81,3 +81,89 @@ body {
 .glow-ambient {
   box-shadow: 0 0 25px rgba(30, 41, 59, 0.4);
 }
+
+/* Formatação do corpo das Notícias & Correções de contraste para seções claras */
+.news-body .noticia-opiniao,
+article .noticia-opiniao {
+  background: #ffffff !important;
+  border-left: 4px solid #f59e0b !important;
+  color: #0f172a !important;
+  padding: 24px !important;
+  border-radius: 16px !important;
+  margin-top: 32px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2) !important;
+}
+
+.news-body .noticia-opiniao h2,
+.news-body .noticia-opiniao h3,
+.news-body .noticia-opiniao p,
+.news-body .noticia-opiniao div,
+.news-body .noticia-opiniao span,
+article .noticia-opiniao h2,
+article .noticia-opiniao h3,
+article .noticia-opiniao p,
+article .noticia-opiniao div,
+article .noticia-opiniao span {
+  color: #0f172a !important;
+}
+
+.news-body .noticia-opiniao h2,
+article .noticia-opiniao h2 {
+  color: #0f172a !important;
+  font-weight: 800 !important;
+  border-bottom: 2px solid #cbd5e1 !important;
+  padding-bottom: 8px !important;
+}
+
+.news-body .noticia-opiniao h3,
+article .noticia-opiniao h3 {
+  color: #b45309 !important;
+  font-weight: 700 !important;
+}
+
+.news-body .noticia-checagem,
+article .noticia-checagem {
+  background: #f0fdf4 !important;
+  border: 1px solid #86efac !important;
+  color: #064e3b !important;
+  padding: 18px 20px !important;
+  border-radius: 14px !important;
+  margin-top: 28px !important;
+}
+
+.news-body .noticia-checagem p,
+.news-body .noticia-checagem div,
+.news-body .noticia-checagem span,
+article .noticia-checagem p,
+article .noticia-checagem div,
+article .noticia-checagem span {
+  color: #064e3b !important;
+  font-weight: 500 !important;
+}
+
+.news-body .noticias-fontes,
+article .noticias-fontes {
+  margin-top: 24px !important;
+  padding-top: 16px !important;
+  border-top: 1px solid #334155 !important;
+}
+
+.news-body .noticias-fontes p,
+article .noticias-fontes p {
+  color: #94a3b8 !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+}
+
+.news-body .noticias-fontes a,
+article .noticias-fontes a {
+  color: #fbbf24 !important;
+  text-decoration: underline !important;
+}
+
+.news-body .noticias-fontes span,
+article .noticias-fontes span {
+  color: #94a3b8 !important;
+}
+
