@@ -40,7 +40,7 @@ export default function Home(props: HomeProps) {
     contactName: "",
     phone: "",
     peopleCount: "",
-    city: "Itaquaquecetuba"
+    city: "São Paulo"
   });
   const [caravanSuccess, setCaravanSuccess] = useState<boolean>(false);
   const [registeredCaravan, setRegisteredCaravan] = useState<Caravan | null>(null);
@@ -149,8 +149,9 @@ export default function Home(props: HomeProps) {
         contactName: "",
         phone: "",
         peopleCount: "",
-        city: "Itaquaquecetuba"
+        city: "São Paulo"
       });
+
     } catch (err) {
       console.error(err);
       setCaravanError(t("home.caravanErrGeneric"));

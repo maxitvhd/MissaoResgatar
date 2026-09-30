@@ -20,7 +20,7 @@ export default function BibleSection() {
   
   // Shareable Prayer Card State
   const [prayerName, setPrayerName] = useState<string>("");
-  const [prayerText, setPrayerText] = useState<string>("Senhor, guia meus passos nas ruas de Itaquaquecetuba, abençoa minha família e concede-me sabedoria diária.");
+  const [prayerText, setPrayerText] = useState<string>("Senhor, guia meus passos na Tua presença, abençoa minha família e concede-me sabedoria diária.");
   const [cardBackground, setCardBackground] = useState<string>("bg-gradient-to-br from-slate-900 to-indigo-950");
   const [copied, setCopied] = useState<boolean>(false);
 

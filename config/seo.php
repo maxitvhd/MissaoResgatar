@@ -14,11 +14,12 @@
 return [
 
     // Identidade exibida nos resultados de busca e ao compartilhar
-    'titulo_padrao' => 'Missão Resgatar | Igreja em Itaquaquecetuba - SP',
-    'descricao_padrao' => 'Missão Resgatar, uma igreja viva resgatando vidas em Itaquaquecetuba. Notícias, devocionais, agenda de cultos, galeria de fotos, loja e rádio online 24h.',
+    'titulo_padrao' => 'Missão Resgatar | Resgatando Vidas no Mundo - São Paulo - SP',
+    'descricao_padrao' => 'Missão Resgatar - Resgatando Vidas no Mundo. Notícias, devocionais, agenda de cultos, galeria de fotos, loja e rádio online 24h.',
     'palavras_chave' => [
-        'igreja em Itaquaquecetuba',
         'Missão Resgatar',
+        'igreja em São Paulo',
+        'resgatando vidas no mundo',
         'igreja cristã',
         'culto',
         'devocional diário',
@@ -49,11 +50,12 @@ return [
         'rua'       => null,
         'numero'    => null,
         'bairro'    => null,
-        'cidade'    => 'Itaquaquecetuba',
+        'cidade'    => 'São Paulo',
         'estado'    => 'SP',
         'cep'       => null,
         'pais'      => 'BR',
     ],
+
 
     // Horarios de culto (viram JSON-LD e ajudam o Google a exibir rich snippet)
     'cultos' => [

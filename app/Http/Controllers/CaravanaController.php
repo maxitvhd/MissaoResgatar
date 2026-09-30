@@ -49,7 +49,7 @@ class CaravanaController extends Controller
             'nome_responsavel'   => $dados['nome_responsavel'],
             'telefone'           => $dados['telefone'],
             'quantidade_pessoas' => $dados['quantidade_pessoas'] ?? 0,
-            'cidade'             => $dados['cidade'] ?? 'Itaquaquecetuba',
+            'cidade'             => $dados['cidade'] ?? 'São Paulo',
         ]);
 
         LogService::info('2 - caravana cadastrada', ['caravana_id' => $caravana->id]);

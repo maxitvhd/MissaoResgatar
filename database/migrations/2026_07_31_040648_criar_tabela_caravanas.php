@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('nome_responsavel');
             $table->string('telefone');
             $table->unsignedInteger('quantidade_pessoas')->default(0);
-            $table->string('cidade')->default('Itaquaquecetuba');
+            $table->string('cidade')->default('São Paulo');
             $table->timestamps();
         });
     }

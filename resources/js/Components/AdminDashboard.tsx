@@ -119,7 +119,7 @@ export default function AdminDashboard() {
   const [carContactName, setCarContactName] = useState<string>("");
   const [carPhone, setCarPhone] = useState<string>("");
   const [carPeopleCount, setCarPeopleCount] = useState<string>("");
-  const [carCity, setCarCity] = useState<string>("Itaquaquecetuba");
+  const [carCity, setCarCity] = useState<string>("São Paulo");
 
   // Form State: Sponsors
   const [sponName, setSponName] = useState<string>("");
@@ -886,7 +886,7 @@ export default function AdminDashboard() {
     setCarContactName(item.contactName);
     setCarPhone(item.phone);
     setCarPeopleCount(String(item.peopleCount || ""));
-    setCarCity(item.city || "Itaquaquecetuba");
+    setCarCity(item.city || "São Paulo");
     triggerSuccess("Dados da caravana carregados para edição!");
   };
 

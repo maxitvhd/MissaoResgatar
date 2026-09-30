@@ -926,14 +926,14 @@ export default function AdminSettingsTab() {
           <div className="bg-slate-950/60 p-4 rounded-2xl border border-slate-800">
             <p className="text-[10px] font-mono text-slate-500 uppercase mb-2">Prévia no Google</p>
             <p className="text-[11px] text-emerald-500 font-mono truncate">
-              {seoTitle || "Missão Resgatar | Igreja em Itaquaquecetuba - SP"}
+              {seoTitle || "Missão Resgatar | Resgatando Vidas no Mundo - São Paulo - SP"}
             </p>
             <p className="text-[11px] text-sky-500 font-mono truncate mt-0.5">
               {typeof window !== "undefined" ? window.location.origin : "https://www.mresgatar.com.br"}
             </p>
             <p className="text-xs text-slate-400 mt-1 leading-relaxed">
               {seoDescription ||
-                "Missão Resgatar, uma igreja viva resgatando vidas em Itaquaquecetuba. Notícias, devocionais, agenda de cultos, galeria de fotos, loja e rádio online 24h."}
+                "Missão Resgatar - Resgatando Vidas no Mundo. Notícias, devocionais, agenda de cultos, galeria de fotos, loja e rádio online 24h."}
             </p>
             <p className="text-[10px] text-slate-500 mt-3">
              {(seoDescription || "descrição padrão").length} caracteres (recomendado: 120 a 160)
@@ -970,7 +970,7 @@ export default function AdminSettingsTab() {
             </label>
             <input
               type="text"
-              placeholder="Missão Resgatar | Igreja em Itaquaquecetuba - SP"
+              placeholder="Missão Resgatar | Resgatando Vidas no Mundo - São Paulo - SP"
               value={seoTitle}
               onChange={(e) => setSeoTitle(e.target.value)}
               className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 outline-none focus:border-amber-500"
@@ -997,7 +997,7 @@ export default function AdminSettingsTab() {
             </label>
             <input
               type="text"
-              placeholder="igreja em Itaquaquecetuba, culto, devocional diário..."
+              placeholder="igreja em São Paulo, culto, devocional diário..."
               value={seoKeywords}
               onChange={(e) => setSeoKeywords(e.target.value)}
               className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 outline-none focus:border-amber-500"
@@ -1093,11 +1093,12 @@ export default function AdminSettingsTab() {
                 <label className="text-[10px] font-mono text-slate-400 uppercase block">Cidade</label>
                 <input
                   type="text"
-                  placeholder="Itaquaquecetuba"
+                  placeholder="São Paulo"
                   value={addressCity}
                   onChange={(e) => setAddressCity(e.target.value)}
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 outline-none focus:border-amber-500"
                 />
+
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-mono text-slate-400 uppercase block">UF</label>

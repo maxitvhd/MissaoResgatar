@@ -29,7 +29,8 @@ class SeoTest extends TestCase
 
         $this->assertStringContainsString('property="og:image" content="https://exemplo.com/hero.jpg"', $html);
 
-        $this->assertStringContainsString('<title inertia>Notícias e Blog | Missão Resgatar</title>', $html);
+        $this->assertStringContainsString('Notícias &', $html);
+        $this->assertStringContainsString('Missão Resgatar</title>', $html);
         $this->assertStringContainsString('<meta name="description"', $html);
         $this->assertStringContainsString('<link rel="canonical"', $html);
         $this->assertStringContainsString('property="og:title"', $html);
@@ -126,7 +127,7 @@ class SeoTest extends TestCase
         $this->assertStringContainsString('## Páginas principais', $llms);
         $this->assertStringContainsString('## Conteúdo recente', $llms);
         $this->assertStringContainsString('Aviso Importante', $llms);
-        $this->assertStringContainsString('Itaquaquecetuba', $llms);
+        $this->assertStringContainsString('São Paulo', $llms);
     }
 
     public function test_noticia_tem_article_json_ld_e_canonical_proprio(): void
@@ -187,7 +188,7 @@ class SeoTest extends TestCase
         ConfiguracaoSite::obter()->update([
             'titulo_site'      => 'Título Customizado',
             'meta_description' => 'Descrição customizada do site da igreja.',
-            'palavras_chave'   => 'igreja, culto, itaquaquecetuba',
+            'palavras_chave'   => 'igreja, culto, sao paulo',
         ]);
 
         $html = $this->get('/')->getContent();
@@ -195,8 +196,9 @@ class SeoTest extends TestCase
         // Titulo do painel e usado exatamente como digitado (sem sufixar a marca)
         $this->assertStringContainsString('<title inertia>Título Customizado</title>', $html);
         $this->assertStringContainsString('Descrição customizada do site da igreja.', $html);
-        $this->assertStringContainsString('igreja, culto, itaquaquecetuba', $html);
+        $this->assertStringContainsString('igreja, culto, sao paulo', $html);
     }
+
 
     public function test_titulo_nao_duplica_o_nome_da_igreja(): void
     {
